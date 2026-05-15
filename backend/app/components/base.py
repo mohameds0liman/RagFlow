@@ -16,8 +16,8 @@ class BaseComponent(ABC):
 
     category:str = ""
     name :str =""
-    inputs: list[InputParam] = []
     icon:Any = ""
+    inputs: list[InputParam] = []
 
     @abstractmethod
     def build(self,config:dict):

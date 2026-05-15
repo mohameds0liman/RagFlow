@@ -56,13 +56,14 @@ class ComponentRegistry:
         return {
             "name": component.name,
             "category": component.category,
+            "icon": f"/icons/{component.icon}" if hasattr(component, "icon") else None,
             "inputs": [p.model_dump() for p in component.inputs],
         }
 
     def list_all_categories(self) -> list[str]:
         return list(self._store.keys())
     
-    
+
     ## For Test
     def list_all_components(self) -> dict:
         return {
