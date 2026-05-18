@@ -83,35 +83,6 @@ def get_component_schema(name: str, category: str = Query(...)):
 factory = PipelineFactory()
 
 ########################################################################
-# test
-@router.post("/kb_Process/load_document")
-def load_document(request:LoadDocumentRequest):
-    try:
-        config = {
-            "category": "loader",
-            "name": request.loader_name,
-            "build_config": request.build_config
-        }
-
-        documents =factory.build_loader_pipeline(build_config=config)
-            # Parse to JSON-serializable format for DB storage later
-        return {
-            "loader": request.loader_name,
-            "document_count": len(documents),
-            "documents": [
-                {
-                    "page_content": doc.page_content,
-                    "metadata": doc.metadata
-                }
-                for doc in documents
-            ]
-        }
-
-    except KeyError as e:
-        raise HTTPException(status_code=404, detail=f"Component not found: {e}")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-########################################################################
 # helpers Functions
 ########################################################################    
 def Document_to_dict(doc: Any) -> dict:
@@ -176,9 +147,43 @@ def _validate_chatbot(db: Session, chatbot_id: str) -> Chatbot:
         raise HTTPException(status_code=404, detail="Chatbot not found")
     return chatbot
 
+
+########################################################################
+# test
+@router.post("/kb_Process/load_document")
+def load_document(request:LoadDocumentRequest):
+    try:
+        config = {
+            "category": "loader",
+            "name": request.loader_name,
+            "build_config": request.build_config
+        }
+
+        documents =factory.build_loader_pipeline(build_config=config)
+            # Parse to JSON-serializable format for DB storage later
+        documents_payload=[Document_to_dict(doc) for doc in documents ]
+        return {
+            "loader": request.loader_name,
+            "document_count": len(documents),
+            "documents":documents_payload
+        }
+
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=f"Component not found: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 ########################################################################
 # Main Endpoints of admin.py
 ########################################################################
+
+
+############################
+############################
+#  admin document stores
+############################
+############################
+
 
 @router.post("/knowledge-bases")
 def create_knowledge_base(
@@ -210,7 +215,7 @@ def get_knowledge_bases(
     db: Session = Depends(get_db),
     ):
         query=db.query(DocumentStore)
-
+        
         if status:
             try:
                 status_enum=DocumentStoreStatus(status)
@@ -219,13 +224,62 @@ def get_knowledge_bases(
             query=query.filter(DocumentStore.status==status_enum)
         stores=query.order_by(DocumentStore.created_date.desc()).all()
         return {
-        "status": "list",
+        "status": status or "all",
         "count": len(stores),
         "knowledge_bases": [to_dict(store,extras=store_counts(store,db)) for store in stores],
         }
 
-# Get one knowledge base details by id.
-@router.get("/knowledge_bases/{knowledge_base_id}")
-def get_knowledge_base(knowledge_base_id: str, db: Session = Depends(get_db)):
+# # Get one knowledge base details by id.
+# @router.get("/knowledge_bases/{knowledge_base_id}")
+# def get_knowledge_base(knowledge_base_id: str, db: Session = Depends(get_db)):
+#     store = _validate_store(db=db, knowledge_base_id=knowledge_base_id)
+#     return {"status": "found", "knowledge_base": to_dict(store)}
+
+
+# Update basic knowledge base fields.
+@router.put("/knowledge_bases/{knowledge_base_id}")
+def update_knowledge_base(
+    knowledge_base_id: str,
+    payload: dict = Body(default_factory=dict),
+    db: Session = Depends(get_db),
+):
     store = _validate_store(db=db, knowledge_base_id=knowledge_base_id)
-    return {"status": "found", "knowledge_base": to_dict(store)}
+
+    if "name" in payload and payload["name"] is not None:
+        store.name = payload["name"]
+    if "description" in payload:
+        store.description = payload["description"]
+    if "status" in payload and payload["status"] is not None:
+        try:
+            store.status = DocumentStoreStatus(payload["status"])
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid document store status")
+
+    db.commit()
+    db.refresh(store)
+    return {"status": "updated", "knowledge_base": to_dict(store,extras=store_counts(store, db))}
+
+
+
+# Delete one knowledge base and all related rows by cascade.
+@router.delete("/knowledge_bases/{knowledge_base_id}")
+def delete_knowledge_base_path(knowledge_base_id: str, db: Session = Depends(get_db)):
+    store = _validate_store(db=db, knowledge_base_id=knowledge_base_id)
+    db.delete(store)
+    db.commit()
+    return {"status": "deleted", "knowledge_base_id": knowledge_base_id}
+
+# #get KB status with KB id
+# @router.get("/knowledge_bases/{knowledge_base_id}/status")
+# def get_knowledge_base_status(knowledge_base_id: str, db: Session = Depends(get_db)):
+#     query=db.query(DocumentStore).filter(DocumentStore.id==knowledge_base_id).first()
+
+#     try:
+#         status=query.status
+#     except ValueError:
+#         raise HTTPException(status_code=400 , detail="Invalid document store status")
+#     return {"status" : status}
+
+############################
+#
+############################

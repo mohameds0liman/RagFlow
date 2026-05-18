@@ -31,7 +31,14 @@ load_document           → to_dict(loader, extras=loader_counts(loader, db))
 
 Everything else — `doc, chunk, splitter, chatbot` — just to_dict(obj), no extras needed.
 
+### endpoints added
+
 Knowledge Bases
 - `@router.post("/knowledge-bases")` Create Knowledge base
 - `@router.get("/knowledge-bases")`  list all Knowledge bases + with filtter for the document store status `active , inactive ...`
 - `@router.get("/knowledge_bases/{knowledge_base_id}")` list Knowledge base with id
+- `@router.put("/knowledge_bases/{knowledge_base_id}")` Update basic knowledge base fields name description and updated_date is handeld automatic in models.py with _now
+- `@router.delete("/knowledge_bases/{knowledge_base_id}")` Delete one knowledge base and all related rows by cascade.
+- `@router.get("/knowledge_bases/{knowledge_base_id}/status")` Get Knowledge base status by id
+
+knowledge bases endpoints almost done may add later
