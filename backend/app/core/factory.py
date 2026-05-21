@@ -75,3 +75,55 @@ class PipelineFactory:
             source_id_key="source",
         )
         return result
+    
+
+
+
+    def build_chat_pipeline(self, chatbot):
+        """Build a ConversationalRetrievalChain from a Chatbot ORM object.
+        Supports both flat config format ({"name":..., "build_config":...})
+        and nested format from DocumentStore ({"vector_store": {"name":..., ...}}).
+        """
+        from langchain.chains import ConversationalRetrievalChain
+        # 1. LLM
+        llm_cfg = chatbot.llm_config
+        if not llm_cfg or "name" not in llm_cfg:
+            raise ValueError("Chatbot has no valid llm_config")
+        llm = registry.build(
+            category="chat_model",
+            name=llm_cfg["name"],
+            config=llm_cfg.get("build_config", {}),
+        )
+        # 2. Embedder (may be nested from DocumentStore copy)
+        emb_cfg = chatbot.embedding_config
+        if not emb_cfg:
+            raise ValueError("Chatbot has no embedding_config")
+        if "embedder" in emb_cfg:
+            emb_cfg = emb_cfg["embedder"]
+        embedder = registry.build(
+            category="embedder",
+            name=emb_cfg["name"],
+            config=emb_cfg.get("build_config", {}),
+        )
+        # 3. Vector Store → Retriever (may be nested from DocumentStore copy)
+        vs_cfg = chatbot.vector_store_config
+        if not vs_cfg:
+            raise ValueError("Chatbot has no vector_store_config")
+        if "vector_store" in vs_cfg:
+            vs_cfg = vs_cfg["vector_store"]
+        vs_def = registry.build(
+            category="vector_store",
+            name=vs_cfg["name"],
+            config=vs_cfg.get("build_config", {}),
+        )
+        vector_store = vs_def["cls"](embedding_function=embedder, **vs_def["kwargs"])
+        retriever = vector_store.as_retriever(
+            search_kwargs={"k": vs_cfg.get("build_config", {}).get("top_k", 4)}
+        )
+        # 4. Chain (no memory — endpoint passes chat_history via invoke)
+        chain = ConversationalRetrievalChain.from_llm(
+            llm=llm,
+            retriever=retriever,
+            return_source_documents=True,
+        )
+        return chain

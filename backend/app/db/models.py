@@ -293,16 +293,16 @@ class Chatbot(Base):
 
     id                  = Column(UUID(as_uuid=False), primary_key=True, default=_uuid)
     created_by          = Column(UUID(as_uuid=False), ForeignKey("user.id", ondelete="SET NULL"), nullable=True, index=True)
-    document_store_id   = Column(UUID(as_uuid=False), ForeignKey("document_store.id", ondelete="SET NULL"), nullable=True, index=True)
+    store_id            = Column(UUID(as_uuid=False), ForeignKey("document_store.id", ondelete="SET NULL"), nullable=True, index=True)
     name                = Column(String(255), nullable=False)
     description         = Column(Text, nullable=True)
     status              = Column(Enum(ChatbotStatus), nullable=False, default=ChatbotStatus.active)
-    published_at         = Column(DateTime, nullable=True)
+    published_at        = Column(DateTime, nullable=True)
 
     # --- LangChain configs stored as JSON blobs ---
     # vector_store_config:  {"provider": "pgvector"|"chroma"|"pinecone", "collection": "...", "top_k": 4}
     vector_store_config = Column(JSON, nullable=True)
-
+    embedding_config    = Column(JSON, nullable=True)
     # llm_config:           {"provider": "openai"|"anthropic"|"ollama", "model": "gpt-4o", "temperature": 0.0, "max_tokens": 1024}
     llm_config          = Column(JSON, nullable=True)
 
@@ -310,8 +310,8 @@ class Chatbot(Base):
     #                         "prompt_template": "...", "return_source_documents": true}
     chain_config        = Column(JSON, nullable=True)
 
-    memory_config           = Column(JSON, nullable=True)
-
+    memory_config       = Column(JSON, nullable=True)
+    prompt_config       = Column(JSON, nullable=True)
     created_date = Column(DateTime, nullable=False, default=_now)
     updated_date = Column(DateTime, nullable=False, default=_now, onupdate=_now)
 
@@ -453,7 +453,7 @@ if __name__ == "__main__":
 
         bot = Chatbot(
             created_by        = admin.id,
-            document_store_id = store.id,
+            store_id          = store.id,
             name              = "Support Bot",
             description       = "Answers product questions from the docs",
             status         = ChatbotStatus.active,
