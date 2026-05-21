@@ -22,6 +22,7 @@ from app.api.Admin.admin import (
     _validate_chatbot,
     factory,
 )
+from app.api.auth import require_admin
 router = APIRouter(prefix="/admin", tags=["ChatBot"])
 # -------------------------------------------------------------------------
 # Pydantic Schemas
@@ -30,7 +31,6 @@ class CreateChatbotRequest(BaseModel):
     name: str
     description: str | None = None
     store_id: str | None = None
-    created_by: str | None = None  ## this not set like that it must set automatic with the admin id while the session  may added later with the auth 
     status: ChatbotStatus | None=ChatbotStatus.active
     llm_config: dict | None = None
     chain_config: dict | None = None
@@ -38,6 +38,13 @@ class CreateChatbotRequest(BaseModel):
     prompt_config: dict | None = None
 
 
+class UpdateChatbotRequest(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    llm_config: dict | None = None
+    chain_config: dict | None = None
+    memory_config: dict | None = None
+    prompt_config: dict | None = None
 # -------------------------------------------------------------------------
 # Helpers
 # -------------------------------------------------------------------------
@@ -61,12 +68,9 @@ def _chatbot_to_dict(bot, db: Session | None = None) -> dict:
 @router.post("/chatbots")
 def create_chatbot(
     request: CreateChatbotRequest,
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    if request.created_by:
-        owner = db.query(User).filter(User.id == request.created_by).first()
-        if not owner:
-            raise HTTPException(status_code=404, detail="Creator user not found")
     
     if request.store_id is not None:
         store_config=db.query(DocumentStore).filter(DocumentStore.id==request.store_id).first()
@@ -74,7 +78,7 @@ def create_chatbot(
 
 
     chatbot = Chatbot(
-        created_by=request.created_by,
+        created_by=admin_user.id,
         store_id=request.store_id,
         name=request.name,
         description=request.description,
@@ -97,7 +101,6 @@ def create_chatbot(
 #   "name": "My Support Bot",
 #   "description": "Answers product questions",
 #   "store_id": "550e8400-e29b-41d4-a716-446655440000",
-#   "created_by": "550e8400-e29b-41d4-a716-446655440001",
 #   "status": "active",
 #   "llm_config": {
 #     "name": "ChatOllama",
@@ -137,7 +140,8 @@ def get_chatbot(chatbot_id: str, db: Session = Depends(get_db)):
 @router.put("/chatbots/{chatbot_id}")
 def update_chatbot(
     chatbot_id: str,
-    request: CreateChatbotRequest,
+    request: UpdateChatbotRequest,
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     chatbot = _validate_chatbot(db=db, chatbot_id=chatbot_id)
@@ -145,25 +149,24 @@ def update_chatbot(
         chatbot.name = request.name
     if request.description is not None:
         chatbot.description = request.description
-    if request.status is not None:
-        chatbot.status = request.status
-
-    if request.store_id is not None:
-        _validate_store(db=db, knowledge_base_id=request.store_id)
-        chatbot.store_id = request.store_id
-###############################################
     if request.llm_config is not None:
         chatbot.llm_config = request.llm_config
     if request.chain_config is not None:
         chatbot.chain_config = request.chain_config
     if request.memory_config is not None:
         chatbot.memory_config = request.memory_config
+    if request.prompt_config is not None:
+        chatbot.prompt_config = request.prompt_config
     db.commit()
     db.refresh(chatbot)
     return {"status": "updated", "chatbot": _chatbot_to_dict(chatbot, db)}
 
 @router.delete("/chatbots/{chatbot_id}")
-def delete_chatbot(chatbot_id: str, db: Session = Depends(get_db)):
+def delete_chatbot(
+    chatbot_id: str,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
     chatbot = _validate_chatbot(db=db, chatbot_id=chatbot_id)
     db.delete(chatbot)
     db.commit()

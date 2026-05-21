@@ -32,7 +32,7 @@ from app.db.models import(
     UploadedDocumentStatus,
     ChunkStatus,
 )
-
+from app.api.auth import require_admin
 
 
 
@@ -165,7 +165,7 @@ def _validate_chatbot(db: Session, chatbot_id: str) -> Chatbot:
 ########################################################################
 # test
 @router.post("/kb_Process/load_document")
-def load_document(request:LoadDocumentRequest):
+def load_document(request:LoadDocumentRequest , admin_user: User = Depends(require_admin),):
     try:
         config = {
             "category": "loader",
@@ -207,17 +207,16 @@ def load_document(request:LoadDocumentRequest):
 def create_knowledge_base(
     knowledge_base_name: str = Body(...),
     description: str = Body(""),
-    # Admin id so when the admin open we give him his KB only
-    created_by: str | None = Body(default=None),
+    admin_id: User = Depends(require_admin),
     db:Session=Depends(get_db)
     ):
-    if created_by:
-        owner=db.query(User).filter(User.id==created_by).first()
+    if admin_id:
+        owner=db.query(User).filter(User.id==admin_id.id).first()
         if not owner:
             raise HTTPException(status_code=404, detail="Creator user not found")
 
     store=DocumentStore(
-       created_by=created_by,
+       created_by=admin_id.id,
         name=knowledge_base_name,
         description=description,
         status=DocumentStoreStatus.active,
@@ -259,6 +258,7 @@ def get_knowledge_bases(
 def update_knowledge_base(
     knowledge_base_id: str,
     payload: dict = Body(default_factory=dict),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     store = _validate_store(db=db, knowledge_base_id=knowledge_base_id)
@@ -281,7 +281,7 @@ def update_knowledge_base(
 
 # Delete one knowledge base and all related rows by cascade.
 @router.delete("/knowledge_bases/{knowledge_base_id}")
-def delete_knowledge_base_path(knowledge_base_id: str, db: Session = Depends(get_db)):
+def delete_knowledge_base_path(knowledge_base_id: str, admin_user: User = Depends(require_admin),db: Session = Depends(get_db)):
     store = _validate_store(db=db, knowledge_base_id=knowledge_base_id)
     db.delete(store)
     db.commit()
@@ -334,6 +334,7 @@ def knowledge_base_status(knowledge_base_id: str, db: Session = Depends(get_db))
 def create_upsertion_config(
     knowledge_base_id: str,
     request: UpsertionConfig,
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     store = _validate_store(db=db, knowledge_base_id=knowledge_base_id)
@@ -361,6 +362,7 @@ def create_upsertion_config(
 def update_upsertion_config(
     knowledge_base_id: str,
     request: UpsertionConfig,
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     store = _validate_store(db=db, knowledge_base_id=knowledge_base_id)
@@ -387,6 +389,7 @@ def update_upsertion_config(
 def trigger_upsert(
     knowledge_base_id: str,
     doc_id: str = Body(...),    # returned from ingest
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     store = _validate_store(db=db, knowledge_base_id=knowledge_base_id)
@@ -423,6 +426,7 @@ def trigger_upsert(
 def upload_document(
     knowledge_base_id: str,
     file: UploadFile = File(...),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     store = _validate_store(db=db, knowledge_base_id=knowledge_base_id)
@@ -458,6 +462,7 @@ def list_uploaded_documents(knowledge_base_id: str, db: Session = Depends(get_db
 def delete_uploaded_document(
     knowledge_base_id: str,
     doc_id: str,
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     store = _validate_store(db=db, knowledge_base_id=knowledge_base_id)
@@ -485,6 +490,7 @@ def delete_uploaded_document(
 def ingest_document(
     knowledge_base_id: str,
     request: LoadDocumentRequest,
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     store = _validate_store(db=db, knowledge_base_id=knowledge_base_id)
@@ -580,6 +586,7 @@ def updated_chunk(
     knowledge_base_id: str,
     chunk_id: str,
     request:UpdateChunkRequest,
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     store = _validate_store(db=db, knowledge_base_id=knowledge_base_id)
@@ -601,6 +608,7 @@ def updated_chunk(
 def delete_chunk(
     knowledge_base_id: str,
     chunk_id: str,
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     store = _validate_store(db=db, knowledge_base_id=knowledge_base_id)
@@ -618,6 +626,7 @@ def add_chunk(
     knowledge_base_id: str,
     doc_id:str,
     request:UpdateChunkRequest,
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     store = _validate_store(db=db, knowledge_base_id=knowledge_base_id)
