@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RAGFlow — Admin</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f4f0;--surface:#fff;--border:#e5e4df;--text:#1a1a1a;--muted:#888;--hint:#aaa;
+  --purple:#7F77DD;--purple-dark:#534AB7;--purple-light:#EEEDFE;--purple-text:#3C3489;
+  --teal-bg:#E1F5EE;--teal-text:#0F6E56;
+  --danger:#E24B4A;--danger-bg:#FCEBEB;--danger-border:#F7C1C1;
+  --success:#1D9E75;--success-bg:#E1F5EE;
+  --inp:#fff;--inp-border:#d4d3ce;
+  --radius:8px;--radius-lg:12px;
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#141414;--surface:#1e1e1e;--border:#2e2e2e;--text:#f0f0f0;--muted:#777;--hint:#555;
+  --purple-light:#1e1d40;--purple-text:#AFA9EC;--teal-bg:#0a2e20;--teal-text:#5DCAA5;
+  --danger-bg:#2d1010;--danger-border:#4a1515;
+  --inp:#252525;--inp-border:#3a3a3a;}
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh;display:flex;flex-direction:column}
+a{text-decoration:none}
+
+/* topbar */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;background:var(--surface);border-bottom:0.5px solid var(--border);flex-shrink:0}
+.logo{display:flex;align-items:center;gap:9px;font-weight:500;font-size:15px}
+.logo-icon{width:30px;height:30px;border-radius:8px;background:var(--purple);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px}
+.user-pill{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer;padding:5px 10px;border-radius:var(--radius);border:0.5px solid var(--border)}
+.user-pill:hover{background:var(--bg)}
+.user-avatar{width:26px;height:26px;border-radius:50%;background:var(--purple-light);color:var(--purple-dark);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500}
+
+/* layout */
+.layout{display:flex;flex:1;overflow:hidden}
+.sidebar{width:210px;background:var(--surface);border-right:0.5px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.main{flex:1;overflow-y:auto;padding:20px}
+
+/* sidebar nav */
+.nav-section{padding:12px 12px 4px;font-size:11px;font-weight:500;color:var(--hint);letter-spacing:.04em;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 14px;font-size:13px;cursor:pointer;color:var(--muted);border-radius:var(--radius);margin:1px 8px;transition:all .12s}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:var(--purple-light);color:var(--purple-dark);font-weight:500}
+.nav-item i{font-size:16px}
+.sidebar-footer{margin-top:auto;padding:12px;border-top:0.5px solid var(--border)}
+
+/* pages */
+.page{display:none}.page.active{display:block}
+
+/* cards & forms */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.page-title{font-size:16px;font-weight:500}
+.page-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:14px}
+.card-title{font-size:12px;font-weight:500;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg.full{grid-column:1/-1}
+label{font-size:12px;color:var(--muted);font-weight:500}
+input,select,textarea{width:100%;padding:7px 10px;border:0.5px solid var(--inp-border);border-radius:var(--radius);background:var(--inp);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--purple);box-shadow:0 0 0 2px rgba(127,119,221,.12)}
+textarea{resize:vertical;font-family:monospace;font-size:12px}
+.hint{font-size:11px;color:var(--hint);margin-top:3px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:var(--radius);font-size:13px;cursor:pointer;border:0.5px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;transition:all .13s}
+.btn:hover{background:var(--bg)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--purple);color:#fff;border-color:var(--purple)}
+.btn-primary:hover{background:var(--purple-dark)}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-danger{color:var(--danger);border-color:var(--danger-border)}
+.btn-danger:hover{background:var(--danger-bg)}
+.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+
+/* badges */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.badge-active{background:var(--teal-bg);color:var(--teal-text)}
+.badge-store{background:var(--purple-light);color:var(--purple-text)}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--teal-text);display:inline-block}
+
+/* grid */
+.grid-2{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.bot-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;cursor:default;transition:border-color .15s}
+.bot-card:hover{border-color:var(--purple)}
+.bot-name{font-size:13px;font-weight:500;margin-bottom:4px}
+.bot-desc{font-size:12px;color:var(--muted);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* stats */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:20px}
+.stat{background:var(--bg);border-radius:var(--radius);padding:12px 14px}
+.stat-label{font-size:12px;color:var(--muted);margin-bottom:4px}
+.stat-value{font-size:22px;font-weight:500}
+
+/* chat */
+.chat-layout{display:grid;grid-template-columns:220px 1fr;height:calc(100vh - 92px);overflow:hidden;background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg)}
+.chat-sidebar{border-right:0.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.csb-header{padding:11px 14px;border-bottom:0.5px solid var(--border);font-size:12px;font-weight:500;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
+.bot-list{flex:1;overflow-y:auto;padding:8px}
+.bot-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius);cursor:pointer;font-size:13px;margin-bottom:2px}
+.bot-item:hover{background:var(--bg)}
+.bot-item.active{background:var(--bg);color:var(--purple-dark);font-weight:500}
+.bavatar{width:28px;height:28px;border-radius:8px;background:var(--purple-light);color:var(--purple-dark);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.chat-main{display:flex;flex-direction:column;overflow:hidden}
+.chat-header{padding:10px 16px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.ch-info{display:flex;align-items:center;gap:10px}
+.ch-name{font-size:13px;font-weight:500}
+.ch-sub{font-size:11px;color:var(--muted)}
+.messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.msg{display:flex;gap:8px;max-width:80%}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.bubble{padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.5}
+.msg.ai .bubble{background:var(--bg);border-bottom-left-radius:3px}
+.msg.user .bubble{background:var(--purple);color:#fff;border-bottom-right-radius:3px}
+.mavatar{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;align-self:flex-end}
+.msg.ai .mavatar{background:var(--purple-light);color:var(--purple-dark)}
+.msg.user .mavatar{background:var(--purple-dark);color:#fff}
+.sources{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.src-chip{font-size:11px;padding:2px 7px;border-radius:20px;background:var(--bg);color:var(--muted);border:0.5px solid var(--border)}
+.input-area{padding:12px 16px;border-top:0.5px solid var(--border);display:flex;gap:8px;align-items:flex-end}
+.input-area textarea{flex:1;min-height:36px;max-height:110px;padding:8px 12px;resize:none;border-radius:12px;font-size:13px;line-height:1.5;font-family:inherit}
+.send-btn{width:36px;height:36px;border-radius:50%;background:var(--purple);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.send-btn:hover{background:var(--purple-dark)}
+.send-btn:disabled{opacity:.45;cursor:not-allowed}
+.empty-chat{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted)}
+.thinking{display:flex;gap:4px;padding:8px 12px;background:var(--bg);border-radius:12px;border-bottom-left-radius:3px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:bop .8s infinite both}
+.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
+@keyframes bop{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+/* toast */
+.toast{position:fixed;bottom:18px;right:18px;padding:10px 15px;border-radius:var(--radius);font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s;border:0.5px solid;z-index:999}
+.toast.ok{background:var(--success-bg);color:var(--success);border-color:#9FE1CB}
+.toast.err{background:var(--danger-bg);color:var(--danger);border-color:var(--danger-border)}
+.toast.show{opacity:1}
+
+.divider{height:0.5px;background:var(--border);margin:12px 0}
+.empty{text-align:center;padding:40px;color:var(--muted);font-size:13px}
+.empty i{font-size:28px;display:block;opacity:.3;margin-bottom:8px}
+.spinner-sm{width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon"><i class="ti ti-robot"></i></div>
+    RAGFlow Admin
+  </div>
+  <div class="user-pill" onclick="doLogout()">
+    <div class="user-avatar" id="ua">?</div>
+    <span id="uname">Loading…</span>
+    <i class="ti ti-logout" style="font-size:14px;color:var(--muted)" aria-hidden="true"></i>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div style="padding:8px 8px 0">
+      <div class="nav-section">Overview</div>
+      <div class="nav-item active" onclick="nav('dashboard')" id="n-dashboard"><i class="ti ti-layout-dashboard"></i> Dashboard</div>
+      <div class="nav-section">RAG</div>
+      <div class="nav-item" onclick="nav('chatbots')" id="n-chatbots"><i class="ti ti-robot"></i> Chatbots</div>
+      <div class="nav-item" onclick="nav('chat')" id="n-chat"><i class="ti ti-message"></i> Test chat</div>
+    </div>
+    <div class="sidebar-footer">
+      <div style="font-size:11px;color:var(--hint)">RAGFlow v1.0</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div><div class="page-title">Dashboard</div><div class="page-sub">System overview</div></div>
+        <button class="btn btn-sm" onclick="loadDashboard()"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh</button>
+      </div>
+      <div class="stats-grid" id="dash-stats">
+        <div class="stat"><div class="stat-label">Knowledge bases</div><div class="stat-value" id="s-kb">—</div></div>
+        <div class="stat"><div class="stat-label">Documents</div><div class="stat-value" id="s-docs">—</div></div>
+        <div class="stat"><div class="stat-label">Chunks</div><div class="stat-value" id="s-chunks">—</div></div>
+        <div class="stat"><div class="stat-label">Chatbots</div><div class="stat-value" id="s-bots">—</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-robot"></i> Recent chatbots</div>
+        <div id="dash-bots"><div class="empty"><i class="ti ti-loader"></i>Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- CHATBOTS -->
+    <div class="page" id="page-chatbots">
+      <div class="page-header">
+        <div><div class="page-title">Chatbots</div><div class="page-sub">Create and configure chatbots</div></div>
+        <button class="btn btn-primary" onclick="showBotForm()"><i class="ti ti-plus" style="font-size:14px"></i> New chatbot</button>
+      </div>
+
+      <div id="bot-form" style="display:none">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-robot"></i> <span id="form-title">New chatbot</span></div>
+          <div class="form-row">
+            <div class="fg"><label>Name *</label><input type="text" id="f-name" placeholder="Support Bot"/></div>
+            <div class="fg"><label>Document store ID</label><input type="text" id="f-store" placeholder="Knowledge base UUID"/><div class="hint">Inherits vector store & embedding config</div></div>
+            <div class="fg full"><label>Description</label><input type="text" id="f-desc" placeholder="What does this chatbot do?"/></div>
+          </div>
+          <div class="divider"></div>
+          <div class="card-title"><i class="ti ti-brain"></i> LLM config (JSON)</div>
+          <div class="fg"><textarea id="f-llm" rows="4" placeholder='{"name":"ChatOllama","build_config":{"model":"llama3.1:8b","base_url":"http://localhost:11434","temperature":0}}'></textarea></div>
+          <div class="divider"></div>
+          <div class="card-title"><i class="ti ti-link"></i> Chain config (JSON)</div>
+          <div class="fg"><textarea id="f-chain" rows="2" placeholder='{"chain_type":"ConversationalRetrievalChain"}'></textarea></div>
+          <div class="divider"></div>
+          <div class="card-title"><i class="ti ti-messages"></i> Memory config (JSON, optional)</div>
+          <div class="fg"><textarea id="f-memory" rows="2" placeholder="null"></textarea></div>
+          <div class="divider"></div>
+          <div class="card-title"><i class="ti ti-file-text"></i> Prompt config (JSON, optional)</div>
+          <div class="fg"><textarea id="f-prompt" rows="2" placeholder="null"></textarea></div>
+          <div class="actions">
+            <button class="btn" onclick="cancelBotForm()">Cancel</button>
+            <button class="btn btn-primary" onclick="submitBot()" id="submit-btn"><span id="submit-lbl">Create chatbot</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div id="bots-empty" class="empty" style="display:none"><i class="ti ti-robot"></i>No chatbots yet. Create one above.</div>
+      <div class="grid-2" id="bots-grid"></div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="page" id="page-chat">
+      <div class="chat-layout">
+        <div class="chat-sidebar">
+          <div class="csb-header">
+            Chatbots
+            <button class="btn btn-sm" onclick="loadBotsForChat()" style="padding:2px 7px"><i class="ti ti-refresh" style="font-size:12px"></i></button>
+          </div>
+          <div class="bot-list" id="chat-bot-list">
+            <div class="empty" style="padding:20px"><i class="ti ti-robot"></i>No chatbots</div>
+          </div>
+        </div>
+        <div class="chat-main" id="chat-main">
+          <div class="empty-chat">
+            <i class="ti ti-message-chatbot" style="font-size:32px;opacity:.3"></i>
+            <div style="font-size:13px">Select a chatbot to start testing</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let accessToken = localStorage.getItem('access_token');
+let currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+let bots = [];
+let editingId = null;
+let activeBotId = null;
+let activeSessionId = null;
+
+if(!accessToken){ window.location.href='login.html'; }
+
+function initUser() {
+  if(!currentUser) return;
+  document.getElementById('uname').textContent = currentUser.username || currentUser.email;
+  document.getElementById('ua').textContent = (currentUser.username||'?')[0].toUpperCase();
+}
+
+async function apiFetch(path, opts={}) {
+  const headers = {'Content-Type':'application/json', 'Authorization':'Bearer '+accessToken};
+  const res = await fetch(API+path, {...opts, headers, body: opts.body ? JSON.stringify(opts.body) : undefined, credentials:'include'});
+  if(res.status === 401) { doLogout(); return null; }
+  if(!res.ok) {
+    const e = await res.json().catch(()=>({}));
+    throw new Error(e.detail || 'Request failed');
+  }
+  return res.json();
+}
+
+async function tryRefresh() {
+  try {
+    const res = await fetch(API+'/auth/refresh', {method:'POST', credentials:'include'});
+    if(res.ok) { const d = await res.json(); accessToken = d.access_token; localStorage.setItem('access_token', accessToken); return true; }
+  } catch{}
+  return false;
+}
+
+function toast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast '+type+' show';
+  setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+function parseJ(s) { if(!s||s.trim()===''||s.trim()==='null') return null; try{return JSON.parse(s)}catch{return null} }
+
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.getElementById('n-'+page).classList.add('active');
+  if(page==='dashboard') loadDashboard();
+  if(page==='chatbots') loadBots();
+  if(page==='chat') loadBotsForChat();
+}
+
+async function doLogout() {
+  try { await apiFetch('/auth/logout', {method:'POST'}); } catch{}
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('user');
+  window.location.href='login.html';
+}
+
+async function loadDashboard() {
+  try {
+    const d = await apiFetch('/admin/dashboard/stats');
+    if(!d) return;
+    document.getElementById('s-kb').textContent = d.knowledge_bases;
+    document.getElementById('s-docs').textContent = d.documents;
+    document.getElementById('s-chunks').textContent = d.chunks;
+    document.getElementById('s-bots').textContent = d.chatbots;
+  } catch(e) { toast(e.message,'err'); }
+  try {
+    const d = await apiFetch('/admin/chatbots');
+    if(!d) return;
+    const el = document.getElementById('dash-bots');
+    if(!d.chatbots.length){ el.innerHTML='<div class="empty"><i class="ti ti-robot"></i>No chatbots yet</div>'; return; }
+    el.innerHTML = d.chatbots.slice(0,6).map(b=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="bavatar"><i class="ti ti-robot" style="font-size:13px"></i></div>
+          <div>
+            <div style="font-size:13px;font-weight:500">${b.name}</div>
+            <div style="font-size:11px;color:var(--muted)">${b.document_store_name||'No store'}</div>
+          </div>
+        </div>
+        <span class="badge badge-active"><span class="sdot"></span>${b.status||'active'}</span>
+      </div>`).join('');
+  } catch{}
+}
+
+async function loadBots() {
+  try {
+    const d = await apiFetch('/admin/chatbots');
+    if(!d) return;
+    bots = d.chatbots || [];
+    renderBots();
+  } catch(e) { toast(e.message,'err'); }
+}
+
+function renderBots() {
+  const grid = document.getElementById('bots-grid');
+  const empty = document.getElementById('bots-empty');
+  if(!bots.length){ empty.style.display='block'; grid.innerHTML=''; return; }
+  empty.style.display='none';
+  grid.innerHTML = bots.map(b=>`
+    <div class="bot-card">
+      <div class="bot-name">${b.name}</div>
+      <div class="bot-desc">${b.description||'No description'}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+        <span class="badge badge-active"><span class="sdot"></span>${b.status||'active'}</span>
+        ${b.document_store_name?`<span class="badge badge-store"><i class="ti ti-database" style="font-size:10px"></i> ${b.document_store_name}</span>`:''}
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="editBot('${b.id}')"><i class="ti ti-edit" style="font-size:12px"></i> Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteBot('${b.id}')"><i class="ti ti-trash" style="font-size:12px"></i></button>
+      </div>
+    </div>`).join('');
+}
+
+function showBotForm(bot=null) {
+  editingId = bot ? bot.id : null;
+  document.getElementById('form-title').textContent = bot ? 'Edit chatbot' : 'New chatbot';
+  document.getElementById('submit-lbl').textContent = bot ? 'Save changes' : 'Create chatbot';
+  document.getElementById('f-name').value = bot ? bot.name : '';
+  document.getElementById('f-store').value = bot ? (bot.store_id||'') : '';
+  document.getElementById('f-desc').value = bot ? (bot.description||'') : '';
+  document.getElementById('f-llm').value = bot&&bot.llm_config ? JSON.stringify(bot.llm_config,null,2) : '';
+  document.getElementById('f-chain').value = bot&&bot.chain_config ? JSON.stringify(bot.chain_config,null,2) : '';
+  document.getElementById('f-memory').value = bot&&bot.memory_config ? JSON.stringify(bot.memory_config,null,2) : '';
+  document.getElementById('f-prompt').value = bot&&bot.prompt_config ? JSON.stringify(bot.prompt_config,null,2) : '';
+  document.getElementById('bot-form').style.display='block';
+  document.getElementById('bot-form').scrollIntoView({behavior:'smooth'});
+}
+
+function cancelBotForm() { editingId=null; document.getElementById('bot-form').style.display='none'; }
+
+async function submitBot() {
+  const name = document.getElementById('f-name').value.trim();
+  if(!name){ toast('Name is required','err'); return; }
+  const payload = {
+    name, status:'active',
+    description: document.getElementById('f-desc').value.trim()||null,
+    store_id: document.getElementById('f-store').value.trim()||null,
+    llm_config: parseJ(document.getElementById('f-llm').value),
+    chain_config: parseJ(document.getElementById('f-chain').value),
+    memory_config: parseJ(document.getElementById('f-memory').value),
+    prompt_config: parseJ(document.getElementById('f-prompt').value),
+  };
+  const btn = document.getElementById('submit-btn');
+  const lbl = document.getElementById('submit-lbl');
+  btn.disabled=true; lbl.innerHTML='<span class="spinner-sm"></span>';
+  try {
+    if(editingId) { await apiFetch('/admin/chatbots/'+editingId,{method:'PUT',body:payload}); toast('Chatbot updated'); }
+    else { await apiFetch('/admin/chatbots',{method:'POST',body:payload}); toast('Chatbot created'); }
+    cancelBotForm(); loadBots();
+  } catch(e){ toast(e.message,'err'); }
+  btn.disabled=false; lbl.textContent = editingId ? 'Save changes' : 'Create chatbot';
+}
+
+function editBot(id){ const b=bots.find(x=>x.id===id); if(b) showBotForm(b); }
+
+async function deleteBot(id) {
+  if(!confirm('Delete this chatbot?')) return;
+  try { await apiFetch('/admin/chatbots/'+id,{method:'DELETE'}); toast('Deleted'); loadBots(); }
+  catch(e){ toast(e.message,'err'); }
+}
+
+function loadBotsForChat() {
+  const list = document.getElementById('chat-bot-list');
+  if(!bots.length){ list.innerHTML='<div class="empty" style="padding:20px"><i class="ti ti-robot"></i>No chatbots. Create one first.</div>'; return; }
+  list.innerHTML = bots.map(b=>`
+    <div class="bot-item ${b.id===activeBotId?'active':''}" id="bi-${b.id}" onclick="selectBot('${b.id}')">
+      <div class="bavatar"><i class="ti ti-robot" style="font-size:13px"></i></div>
+      <div style="overflow:hidden">
+        <div style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.name}</div>
+        ${b.document_store_name?`<div style="font-size:11px;color:var(--muted)">${b.document_store_name}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+async function selectBot(id) {
+  activeBotId = id; activeSessionId = null;
+  document.querySelectorAll('.bot-item').forEach(i=>i.classList.remove('active'));
+  const el = document.getElementById('bi-'+id); if(el) el.classList.add('active');
+  const bot = bots.find(b=>b.id===id);
+  try {
+    const d = await apiFetch('/admin/chatbots/'+id+'/sessions',{method:'POST',body:{title:'Test — '+bot.name}});
+    if(d) activeSessionId = d.session.id;
+  } catch(e){ toast('Could not create session: '+e.message,'err'); }
+  renderChatMain(bot);
+}
+
+function renderChatMain(bot) {
+  document.getElementById('chat-main').innerHTML = `
+    <div class="chat-header">
+      <div class="ch-info">
+        <div class="bavatar"><i class="ti ti-robot" style="font-size:13px"></i></div>
+        <div><div class="ch-name">${bot.name}</div><div class="ch-sub">${bot.description||'Ready to test'}</div></div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span class="badge badge-active"><span class="sdot"></span>Active</span>
+        <button class="btn btn-sm" onclick="clearChat()"><i class="ti ti-eraser" style="font-size:12px"></i> Clear</button>
+      </div>
+    </div>
+    <div class="messages" id="messages">
+      <div style="text-align:center;font-size:12px;color:var(--muted);padding:10px 0">Session started. Send a message to test.</div>
+    </div>
+    <div class="input-area">
+      <textarea id="chat-inp" placeholder="Type a message…" rows="1" onkeydown="handleKey(event)" oninput="autoR(this)"></textarea>
+      <button class="send-btn" id="send-btn" onclick="sendMsg()" aria-label="Send"><i class="ti ti-send" style="font-size:15px"></i></button>
+    </div>`;
+}
+
+function autoR(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,110)+'px'; }
+function handleKey(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMsg(); } }
+
+function appendMsg(role, content, sources=[]) {
+  const msgs = document.getElementById('messages'); if(!msgs) return;
+  const isUser = role==='user';
+  const d = document.createElement('div');
+  d.className = 'msg '+(isUser?'user':'ai');
+  const srcs = sources.length ? `<div class="sources">${sources.map(s=>`<span class="src-chip"><i class="ti ti-file" style="font-size:10px"></i> ${s.metadata?.source||'source'}</span>`).join('')}</div>` : '';
+  d.innerHTML = `<div class="mavatar">${isUser?'<i class="ti ti-user" style="font-size:13px"></i>':'<i class="ti ti-robot" style="font-size:13px"></i>'}</div><div><div class="bubble">${content.replace(/\n/g,'<br>')}</div>${srcs}</div>`;
+  msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
+}
+
+function showThinking() {
+  const msgs = document.getElementById('messages'); if(!msgs) return null;
+  const d = document.createElement('div');
+  d.className='msg ai'; d.id='think';
+  d.innerHTML='<div class="mavatar"><i class="ti ti-robot" style="font-size:13px"></i></div><div class="thinking"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+  msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; return d;
+}
+
+async function sendMsg() {
+  const inp = document.getElementById('chat-inp');
+  const btn = document.getElementById('send-btn');
+  if(!inp||!activeBotId||!activeSessionId) return;
+  const msg = inp.value.trim(); if(!msg) return;
+  inp.value=''; inp.style.height='auto'; btn.disabled=true;
+  appendMsg('user', msg);
+  const t = showThinking();
+  try {
+    const d = await apiFetch('/admin/chatbots/'+activeBotId+'/sessions/'+activeSessionId+'/chat',{method:'POST',body:{message:msg}});
+    if(t) t.remove();
+    if(d) appendMsg('ai', d.ai_message.content, d.ai_message.source_documents||[]);
+  } catch(e) { if(t) t.remove(); appendMsg('ai','Error: '+e.message); }
+  btn.disabled=false;
+}
+
+async function clearChat() {
+  if(!activeBotId) return;
+  const bot = bots.find(b=>b.id===activeBotId);
+  try { const d = await apiFetch('/admin/chatbots/'+activeBotId+'/sessions',{method:'POST',body:{title:'Test — '+bot.name}}); if(d) activeSessionId=d.session.id; } catch{}
+  const msgs = document.getElementById('messages');
+  if(msgs) msgs.innerHTML='<div style="text-align:center;font-size:12px;color:var(--muted);padding:10px 0">Session cleared.</div>';
+}
+
+initUser();
+loadDashboard();
+</script>
+</body>
+</html>

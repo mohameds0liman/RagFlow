@@ -131,7 +131,7 @@ def store_counts(store, db: Session) -> dict:
         "documents_count": db.query(func.count(UploadedDocument.id)).filter(UploadedDocument.store_id == store.id).scalar(),
         "loaders_count":   db.query(func.count(DocumentLoader.id)).filter(DocumentLoader.store_id == store.id).scalar(),
         "chunks_count":    db.query(func.count(DocumentChunk.id)).filter(DocumentChunk.store_id == store.id).scalar(),
-        "chatbots_count":  db.query(func.count(Chatbot.id)).filter(Chatbot.document_store_id == store.id).scalar(),
+        "chatbots_count":  db.query(func.count(Chatbot.id)).filter(Chatbot.store_id == store.id).scalar(),
     }
 
 
@@ -388,7 +388,7 @@ def update_upsertion_config(
 @router.post("/knowledge_bases/{knowledge_base_id}/upsert")
 def trigger_upsert(
     knowledge_base_id: str,
-    doc_id: str = Body(...),    # returned from ingest
+    doc_id: str = Body(...,examples=["doc_id_f2262c94-dd93-4c93-acc7-908a9faeefac"]),    # returned from ingest
     admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):

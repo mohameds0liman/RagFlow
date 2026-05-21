@@ -15,7 +15,8 @@ app = FastAPI(title="RAG")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    # allow_origins=["*"],
+    allow_origins=["http://localhost:8000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -31,3 +32,13 @@ app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(chatbot_router)
 app.include_router(chat_router)
+
+
+app.mount(
+    "/",
+    StaticFiles(
+        directory=r"D:\WorkSpace\GitHub\Repo\Rag_Flow\Stages\Frontend\Demo",
+        html=True
+    ),
+    name="frontend"
+)
