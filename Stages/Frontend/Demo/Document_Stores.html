@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RAGFlow Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0f0f11;
+  --bg2:#18181c;
+  --bg3:#222228;
+  --bg4:#2a2a32;
+  --border:#2e2e38;
+  --border2:#3d3d4d;
+  --text:#e8e8f0;
+  --text2:#9898b0;
+  --text3:#5a5a72;
+  --accent:#7c6bff;
+  --accent2:#9d90ff;
+  --accent-bg:rgba(124,107,255,0.12);
+  --accent-border:rgba(124,107,255,0.35);
+  --success:#34d399;
+  --success-bg:rgba(52,211,153,0.1);
+  --warning:#fbbf24;
+  --warning-bg:rgba(251,191,36,0.1);
+  --danger:#f87171;
+  --danger-bg:rgba(248,113,113,0.1);
+  --info:#60a5fa;
+  --info-bg:rgba(96,165,250,0.1);
+  --radius:8px;
+  --radius-lg:12px;
+  --font:'DM Sans',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;min-height:100vh;}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;height:54px;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;position:sticky;top:0;z-index:50;}
+.logo{display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px;color:var(--text);margin-right:32px;text-decoration:none;}
+.logo-dot{width:22px;height:22px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;}
+.logo-dot svg{width:13px;height:13px;fill:#fff;}
+.tabs{display:flex;gap:2px;height:100%;}
+.tab{display:flex;align-items:center;gap:6px;padding:0 16px;height:100%;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font);}
+.tab:hover{color:var(--text2);background:var(--bg3);}
+.tab.active{color:var(--text);border-bottom-color:var(--accent);}
+.tab svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.8;fill:none;}
+
+/* CONTENT */
+.content{padding:32px;max-width:1200px;margin:0 auto;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:none;font-family:var(--font);}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-1px);}
+.btn-primary:active{transform:translateY(0);}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2);}
+.btn-ghost:hover{color:var(--text);background:var(--bg3);border-color:var(--border2);}
+.btn-danger{background:transparent;color:var(--danger);border:1px solid rgba(248,113,113,0.3);}
+.btn-danger:hover{background:var(--danger-bg);}
+.btn-sm{padding:5px 11px;font-size:12px;}
+.btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+
+/* PLACEHOLDER SCREENS */
+.placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:14px;text-align:center;}
+.placeholder-icon{width:64px;height:64px;background:var(--bg3);border-radius:16px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);}
+.placeholder-icon svg{width:28px;height:28px;stroke:var(--text3);stroke-width:1.5;fill:none;}
+.placeholder h2{font-size:18px;font-weight:600;color:var(--text);}
+.placeholder p{font-size:13px;color:var(--text3);max-width:300px;line-height:1.7;}
+.placeholder-badge{background:var(--bg3);color:var(--text3);font-size:11px;padding:3px 10px;border-radius:99px;border:1px solid var(--border);}
+
+/* KB GRID */
+.ds-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.ds-title{font-size:20px;font-weight:600;}
+.kb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.kb-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;cursor:pointer;transition:all .15s;}
+.kb-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.kb-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;}
+.kb-name{font-size:15px;font-weight:600;color:var(--text);}
+.kb-desc{font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.6;}
+.kb-stats{display:flex;gap:14px;margin-bottom:14px;}
+.stat{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text3);}
+.stat svg{width:13px;height:13px;stroke:var(--text3);fill:none;}
+.kb-actions{display:flex;gap:6px;border-top:1px solid var(--border);padding-top:14px;}
+.badge{font-size:10px;padding:3px 9px;border-radius:99px;font-weight:600;letter-spacing:.02em;}
+.badge-active{background:var(--success-bg);color:var(--success);}
+.badge-pending{background:var(--warning-bg);color:var(--warning);}
+.badge-ready{background:var(--success-bg);color:var(--success);}
+
+/* EMPTY STATE */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:60px 20px;color:var(--text3);text-align:center;}
+.empty svg{width:36px;height:36px;stroke:var(--text3);fill:none;opacity:.5;}
+.empty p{font-size:13px;}
+
+/* OVERLAYS / MODALS */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;backdrop-filter:blur(2px);}
+.overlay.open{display:flex;}
+
+/* DRAWER */
+.drawer-wrap{display:flex;align-items:stretch;justify-content:flex-end;position:fixed;inset:0;z-index:200;display:none;}
+.drawer-wrap.open{display:flex;}
+.drawer-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);}
+.drawer{position:relative;z-index:1;width:640px;max-width:100%;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
+.drawer-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;background:var(--bg2);z-index:2;}
+.drawer-title{font-size:16px;font-weight:600;}
+.drawer-subtitle{font-size:12px;color:var(--text3);margin-top:2px;}
+.close-btn{background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;border-radius:6px;display:flex;align-items:center;}
+.close-btn:hover{background:var(--bg3);color:var(--text);}
+.close-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;}
+.drawer-body{padding:24px;flex:1;}
+
+/* MINI MODAL */
+.mini-modal-wrap{align-items:center;justify-content:center;}
+.mini-modal{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;width:460px;max-width:95%;position:relative;z-index:1;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.modal-title{font-size:15px;font-weight:600;}
+
+/* STEPS NAV */
+.steps{display:flex;gap:2px;background:var(--bg3);border-radius:10px;padding:4px;margin-bottom:24px;}
+.step-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 4px;font-size:11px;font-weight:600;border:none;background:none;cursor:pointer;border-radius:7px;color:var(--text3);transition:all .15s;font-family:var(--font);letter-spacing:.01em;}
+.step-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;flex-shrink:0;}
+.step-btn:hover{color:var(--text2);}
+.step-btn.active{background:var(--bg2);color:var(--text);border:1px solid var(--border2);}
+.step-btn.done{color:var(--success);}
+.step-panel{display:none;}
+.step-panel.active{display:block;}
+
+/* FORMS */
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-size:11px;font-weight:600;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:9px 12px;font-size:13px;color:var(--text);outline:none;font-family:var(--font);transition:border-color .15s;}
+.form-input:focus{border-color:var(--accent);}
+select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239898b0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;cursor:pointer;}
+textarea.form-input{resize:vertical;font-family:var(--mono);font-size:12px;line-height:1.6;}
+
+/* ALERTS */
+.alert{padding:10px 14px;border-radius:var(--radius);font-size:12px;margin-bottom:14px;display:flex;align-items:flex-start;gap:8px;line-height:1.5;}
+.alert svg{width:14px;height:14px;stroke:currentColor;fill:none;flex-shrink:0;margin-top:1px;}
+.alert-info{background:var(--info-bg);color:var(--info);border:1px solid rgba(96,165,250,.2);}
+.alert-success{background:var(--success-bg);color:var(--success);border:1px solid rgba(52,211,153,.2);}
+.alert-err{background:var(--danger-bg);color:var(--danger);border:1px solid rgba(248,113,113,.2);}
+.alert-warning{background:var(--warning-bg);color:var(--warning);border:1px solid rgba(251,191,36,.2);}
+
+/* TOOL ITEMS */
+.tool-list{display:flex;flex-direction:column;gap:8px;}
+.tool-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .15s;}
+.tool-item:hover{border-color:var(--accent-border);background:var(--accent-bg);}
+.tool-icon{width:34px;height:34px;background:var(--accent-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tool-icon svg{width:16px;height:16px;stroke:var(--accent2);fill:none;}
+.tool-name{font-size:13px;font-weight:600;color:var(--text);}
+.tool-desc{font-size:11px;color:var(--text3);margin-top:2px;}
+
+/* DOC ROWS */
+.doc-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;background:var(--bg3);transition:border-color .15s;}
+.doc-row:hover{border-color:var(--border2);}
+.doc-icon{width:32px;height:32px;background:var(--bg4);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.doc-icon svg{width:15px;height:15px;stroke:var(--text3);fill:none;}
+.doc-info{flex:1;min-width:0;}
+.doc-name{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.doc-meta{font-size:11px;color:var(--text3);margin-top:1px;}
+
+/* CHUNK LIST */
+.chunk-list{display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;padding-right:4px;}
+.chunk-list::-webkit-scrollbar{width:4px;}
+.chunk-list::-webkit-scrollbar-track{background:transparent;}
+.chunk-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px;}
+.chunk-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;cursor:pointer;transition:all .15s;}
+.chunk-item:hover{border-color:var(--accent-border);background:var(--accent-bg);}
+.chunk-no{font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:4px;}
+.chunk-text{font-size:12px;color:var(--text2);line-height:1.6;}
+
+/* UPLOAD ZONE */
+.upload-zone{border:1.5px dashed var(--border2);border-radius:var(--radius-lg);padding:32px;text-align:center;cursor:pointer;transition:all .15s;margin-bottom:14px;}
+.upload-zone:hover{border-color:var(--accent);background:var(--accent-bg);}
+.upload-zone svg{width:28px;height:28px;stroke:var(--text3);fill:none;margin-bottom:10px;}
+.upload-zone p{font-size:13px;color:var(--text3);}
+.upload-zone .hint{font-size:11px;color:var(--text3);opacity:.6;margin-top:4px;}
+
+/* MONO RESULT */
+.mono-result{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-family:var(--mono);font-size:11px;color:var(--text2);white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-top:12px;line-height:1.7;}
+
+/* SPINNER */
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
+.spin-accent{border-color:var(--accent-bg);border-top-color:var(--accent);}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.section-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;margin-top:20px;}
+.divider{height:1px;background:var(--border);margin:18px 0;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <a class="logo" href="#">
+    <div class="logo-dot">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    RAGFlow Admin
+  </a>
+  <div class="tabs">
+    <button class="tab" onclick="switchTab('chatbot')" id="tab-chatbot">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Chatbots
+    </button>
+    <button class="tab active" onclick="switchTab('docstore')" id="tab-docstore">
+      <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+      Document stores
+    </button>
+    <button class="tab" onclick="switchTab('chat')" id="tab-chat">
+      <svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      Chat
+    </button>
+    <button class="tab" onclick="switchTab('profile')" id="tab-profile">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
+    </button>
+  </div>
+</div>
+
+<!-- CONTENT AREA -->
+<div class="content">
+
+  <!-- CHATBOTS -->
+  <div id="screen-chatbot" style="display:none">
+    <div class="placeholder">
+      <div class="placeholder-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+      <span class="placeholder-badge">Coming soon</span>
+      <h2>Chatbots</h2>
+      <p>Create and configure AI chatbots powered by your knowledge bases. Connect them to a document store and deploy.</p>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div id="screen-chat" style="display:none">
+    <div class="placeholder">
+      <div class="placeholder-icon"><svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg></div>
+      <span class="placeholder-badge">Coming soon</span>
+      <h2>Chat</h2>
+      <p>Test your chatbots in real time. Pick a bot, ask questions, and iterate on your knowledge base quality.</p>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="screen-profile" style="display:none">
+    <div class="placeholder">
+      <div class="placeholder-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+      <span class="placeholder-badge">Coming soon</span>
+      <h2>Profile</h2>
+      <p>Manage your account, API keys, preferences, and notification settings.</p>
+    </div>
+  </div>
+
+  <!-- DOCUMENT STORES -->
+  <div id="screen-docstore">
+    <div class="ds-header">
+      <span class="ds-title">Document stores</span>
+      <button class="btn btn-primary" onclick="openCreateKB()">
+        <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New store
+      </button>
+    </div>
+    <div id="kb-grid" class="kb-grid">
+      <div class="empty" style="grid-column:1/-1">
+        <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        <p>No knowledge bases yet.<br>Create one to get started.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ====== CREATE KB MODAL ====== -->
+<div class="overlay mini-modal-wrap" id="modal-create-kb" onclick="bgClose(event,'modal-create-kb')">
+  <div class="mini-modal">
+    <div class="modal-header">
+      <span class="modal-title">New knowledge base</span>
+      <button class="close-btn" onclick="closeModal('modal-create-kb')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Name *</label>
+      <input class="form-input" id="kb-name" placeholder="e.g. Product documentation">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input class="form-input" id="kb-desc" placeholder="Optional">
+    </div>
+    <div id="create-msg"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-create-kb')">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="btn-create" onclick="createKB()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== KB DRAWER ====== -->
+<div class="drawer-wrap" id="drawer-kb">
+  <div class="drawer-backdrop" onclick="closeDrawer()"></div>
+  <div class="drawer">
+    <div class="drawer-header">
+      <div>
+        <div class="drawer-title" id="drawer-name">Knowledge base</div>
+        <div class="drawer-subtitle" id="drawer-id"></div>
+      </div>
+      <button class="close-btn" onclick="closeDrawer()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="drawer-body">
+      <!-- Steps nav -->
+      <div class="steps">
+        <button class="step-btn active" id="sbtn-0" onclick="goStep(0)">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload
+        </button>
+        <button class="step-btn" id="sbtn-1" onclick="goStep(1)">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M3.93 19.07l1.41-1.41M20 12h2M2 12h2M19.07 19.07l-1.41-1.41M3.93 4.93l1.41 1.41M12 20v2M12 2v2"/></svg>
+          Ingest
+        </button>
+        <button class="step-btn" id="sbtn-2" onclick="goStep(2)">
+          <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+          Chunks
+        </button>
+        <button class="step-btn" id="sbtn-3" onclick="goStep(3)">
+          <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          Config
+        </button>
+        <button class="step-btn" id="sbtn-4" onclick="goStep(4)">
+          <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+          Embed
+        </button>
+      </div>
+
+      <!-- Step 0: Upload -->
+      <div class="step-panel active" id="sp-0">
+        <div class="alert alert-info">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Upload a document file to this knowledge base.
+        </div>
+        <div class="upload-zone" onclick="document.getElementById('file-input').click()">
+          <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+          <p>Click to choose a file</p>
+          <p class="hint">PDF, TXT, DOCX and more</p>
+          <input type="file" id="file-input" style="display:none" onchange="onFileSelect(this)">
+        </div>
+        <div id="file-name" style="font-size:12px;color:var(--text3);margin-bottom:8px;"></div>
+        <div id="upload-msg"></div>
+        <button class="btn btn-primary btn-sm" onclick="doUpload()" id="btn-upload">
+          <svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload
+        </button>
+        <div class="section-label" style="margin-top:24px;">Uploaded documents</div>
+        <div id="docs-list"></div>
+      </div>
+
+      <!-- Step 1: Ingest -->
+      <div class="step-panel" id="sp-1">
+        <div class="alert alert-info">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Select a document, configure the loader and chunker, then process.
+        </div>
+        <div class="form-group">
+          <label class="form-label">Document *</label>
+          <select class="form-input" id="ingest-doc"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Loader *</label>
+          <select class="form-input" id="loader-sel" onchange="onLoaderChange()"></select>
+        </div>
+        <div id="loader-fields"></div>
+        <div class="form-group">
+          <label class="form-label">Chunker *</label>
+          <select class="form-input" id="chunker-sel" onchange="onChunkerChange()"></select>
+        </div>
+        <div id="chunker-fields"></div>
+        <div id="ingest-msg"></div>
+        <button class="btn btn-primary btn-sm" onclick="doIngest()" id="btn-ingest">
+          <svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Process
+        </button>
+      </div>
+
+      <!-- Step 2: Chunks -->
+      <div class="step-panel" id="sp-2">
+        <div class="alert alert-info">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Review and edit chunks. Click any chunk to edit or delete it.
+        </div>
+        <div class="form-group">
+          <label class="form-label">Document</label>
+          <select class="form-input" id="chunk-doc" onchange="loadChunks()"></select>
+        </div>
+        <div id="chunk-msg"></div>
+        <div id="chunk-container"></div>
+      </div>
+
+      <!-- Step 3: Upsert Config -->
+      <div class="step-panel" id="sp-3">
+        <div class="alert alert-info">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Configure the embedder, vector store, and record manager.
+        </div>
+        <div class="form-group">
+          <label class="form-label">Embedder</label>
+          <select class="form-input" id="emb-sel" onchange="onEmbChange()"></select>
+        </div>
+        <div id="emb-fields"></div>
+        <div class="divider"></div>
+        <div class="form-group">
+          <label class="form-label">Vector store</label>
+          <select class="form-input" id="vs-sel" onchange="onVSChange()"></select>
+        </div>
+        <div id="vs-fields"></div>
+        <div class="divider"></div>
+        <div class="form-group">
+          <label class="form-label">Record manager</label>
+          <select class="form-input" id="rm-sel" onchange="onRMChange()"></select>
+        </div>
+        <div id="rm-fields"></div>
+        <div id="config-msg"></div>
+        <button class="btn btn-primary btn-sm" style="margin-top:16px;" onclick="saveConfig()" id="btn-cfg">
+          <svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save config
+        </button>
+      </div>
+
+      <!-- Step 4: Embed -->
+      <div class="step-panel" id="sp-4">
+        <div class="alert alert-info">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Embed all chunks from a document into the vector store using the saved config.
+        </div>
+        <div class="form-group">
+          <label class="form-label">Document</label>
+          <select class="form-input" id="embed-doc"></select>
+        </div>
+        <div id="embed-msg"></div>
+        <button class="btn btn-primary btn-sm" onclick="doUpsert()" id="btn-upsert">
+          <svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+          Embed now
+        </button>
+        <div id="upsert-out"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ====== CHUNK EDIT MODAL ====== -->
+<div class="overlay mini-modal-wrap" id="modal-chunk" onclick="bgClose(event,'modal-chunk')">
+  <div class="mini-modal" style="width:540px;">
+    <div class="modal-header">
+      <span class="modal-title">Edit chunk</span>
+      <button class="close-btn" onclick="closeModal('modal-chunk')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Content</label>
+      <textarea class="form-input" id="chunk-content" rows="9"></textarea>
+    </div>
+    <div id="chunk-edit-msg"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
+      <button class="btn btn-danger btn-sm" onclick="deleteChunk()">Delete</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-chunk')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveChunk()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const BASE = "http://localhost:8000/admin"
+let kbList=[], activeKB=null, docs=[], schemas={}, currentChunkId=null
+
+async function api(path,opts={}){
+  const h={"Content-Type":"application/json",...(opts.headers||{})}
+  const r=await fetch(BASE+path,{...opts,headers:h})
+  if(!r.ok){const e=await r.json().catch(()=>({detail:r.statusText}));throw new Error(e.detail||r.statusText)}
+  return r.json()
+}
+
+function msg(id,text,type="info"){
+  const el=document.getElementById(id);if(!el)return
+  el.innerHTML=text?`<div class="alert alert-${type}"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>${text}</div>`:""
+}
+
+function switchTab(t){
+  ["chatbot","docstore","chat","profile"].forEach(x=>{
+    document.getElementById("tab-"+x).classList.toggle("active",x===t)
+    document.getElementById("screen-"+x).style.display=x===t?"":"none"
+  })
+  if(t==="docstore")loadKBList()
+}
+switchTab("docstore")
+
+async function loadKBList(){
+  try{const d=await api("/knowledge-bases");kbList=d.knowledge_bases||[];renderGrid()}
+  catch(e){document.getElementById("kb-grid").innerHTML=`<div class="alert alert-err" style="grid-column:1/-1">${e.message}</div>`}
+}
+
+function renderGrid(){
+  const el=document.getElementById("kb-grid")
+  if(!kbList.length){el.innerHTML=`<div class="empty" style="grid-column:1/-1"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg><p>No knowledge bases yet.<br>Create one to get started.</p></div>`;return}
+  el.innerHTML=kbList.map(kb=>`
+  <div class="kb-card" onclick="openKB('${kb.id}')">
+    <div class="kb-card-header">
+      <span class="kb-name">${kb.name}</span>
+      <span class="badge badge-active">${kb.status||"active"}</span>
+    </div>
+    <div class="kb-desc">${kb.description||"No description"}</div>
+    <div class="kb-stats">
+      <span class="stat"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${kb.documents_count||0} docs</span>
+      <span class="stat"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>${kb.chunks_count||0} chunks</span>
+    </div>
+    <div class="kb-actions" onclick="event.stopPropagation()">
+      <button class="btn btn-ghost btn-sm" onclick="openKB('${kb.id}')">Manage</button>
+      <button class="btn btn-danger btn-sm" onclick="delKB(event,'${kb.id}')">Delete</button>
+    </div>
+  </div>`).join("")
+}
+
+function openCreateKB(){
+  document.getElementById("kb-name").value=""
+  document.getElementById("kb-desc").value=""
+  msg("create-msg","")
+  document.getElementById("modal-create-kb").style.display="flex"
+}
+
+async function createKB(){
+  const name=document.getElementById("kb-name").value.trim()
+  if(!name){msg("create-msg","Name is required","err");return}
+  const btn=document.getElementById("btn-create")
+  btn.disabled=true;btn.innerHTML=`<span class="spin"></span> Creating...`
+  try{
+    await api("/knowledge-bases",{method:"POST",body:JSON.stringify({knowledge_base_name:name,description:document.getElementById("kb-desc").value})})
+    closeModal("modal-create-kb");await loadKBList()
+  }catch(e){msg("create-msg",e.message,"err")}
+  finally{btn.disabled=false;btn.textContent="Create"}
+}
+
+async function delKB(e,id){
+  e.stopPropagation()
+  if(!confirm("Delete this knowledge base and all its data?"))return
+  try{await api(`/knowledge_bases/${id}`,{method:"DELETE"});await loadKBList()}
+  catch(e){alert(e.message)}
+}
+
+async function openKB(id){
+  activeKB=kbList.find(k=>k.id===id)
+  document.getElementById("drawer-name").textContent=activeKB.name
+  document.getElementById("drawer-id").textContent="ID: "+id
+  document.getElementById("drawer-kb").classList.add("open")
+  goStep(0)
+  await Promise.all([loadComponents(),loadDocs()])
+}
+
+function closeDrawer(){document.getElementById("drawer-kb").classList.remove("open");activeKB=null}
+function closeModal(id){document.getElementById(id).style.display="none"}
+function bgClose(e,id){if(e.target===document.getElementById(id))closeModal(id)}
+
+let curStep=0
+function goStep(n){
+  curStep=n
+  for(let i=0;i<5;i++){
+    document.getElementById("sbtn-"+i).classList.toggle("active",i===n)
+    document.getElementById("sp-"+i).classList.toggle("active",i===n)
+  }
+  if(n===1)fillSelect("ingest-doc",docs)
+  if(n===2)fillSelect("chunk-doc",docs)
+  if(n===4)fillSelect("embed-doc",docs)
+}
+
+let comps={}
+async function loadComponents(){
+  const cats=["loader","chunker","embedder","vector_store","record_manager"]
+  const res=await Promise.allSettled(cats.map(c=>api(`/components?category=${c}`)))
+  cats.forEach((c,i)=>{if(res[i].status==="fulfilled")comps[c]=res[i].value})
+  fillSelect2("loader-sel",comps["loader"]||{})
+  fillSelect2("chunker-sel",comps["chunker"]||{})
+  fillSelect2("emb-sel",comps["embedder"]||{})
+  fillSelect2("vs-sel",comps["vector_store"]||{})
+  fillSelect2("rm-sel",comps["record_manager"]||{})
+}
+
+function fillSelect(id,arr){
+  const el=document.getElementById(id);if(!el)return
+  el.innerHTML=`<option value="">— pick a document —</option>`+arr.map(d=>`<option value="${d.id}">${d.file_name}</option>`).join("")
+}
+function fillSelect2(id,obj){
+  const el=document.getElementById(id);if(!el)return
+  const keys=Object.keys(obj)
+  el.innerHTML=keys.length?`<option value="">— select —</option>`+keys.map(k=>`<option value="${k}">${k}</option>`).join(""):`<option value="">None available</option>`
+}
+
+async function getSchema(cat,name){
+  const k=cat+":"+name
+  if(!schemas[k])schemas[k]=await api(`/components/${name}/schema?category=${cat}`)
+  return schemas[k]
+}
+
+function renderFields(containerId,inputs){
+  const el=document.getElementById(containerId);if(!el)return
+  if(!inputs||!inputs.length){el.innerHTML="";return}
+  el.innerHTML=inputs.map(inp=>`
+    <div class="form-group">
+      <label class="form-label">${inp.name}${inp.required?" *":""}</label>
+      <input class="form-input" data-key="${inp.name}" id="f-${containerId}-${inp.name}" placeholder="${inp.description||inp.name}" value="${inp.default??""}" type="${inp.type==='int'?'number':'text'}">
+    </div>`).join("")
+}
+
+function collectFields(containerId){
+  const el=document.getElementById(containerId);if(!el)return{}
+  const out={}
+  el.querySelectorAll("[data-key]").forEach(i=>out[i.dataset.key]=i.value)
+  return out
+}
+
+async function onLoaderChange(){const n=document.getElementById("loader-sel").value;if(n){try{const s=await getSchema("loader",n);renderFields("loader-fields",s.inputs||[])}catch(e){}}else document.getElementById("loader-fields").innerHTML=""}
+async function onChunkerChange(){const n=document.getElementById("chunker-sel").value;if(n){try{const s=await getSchema("chunker",n);renderFields("chunker-fields",s.inputs||[])}catch(e){}}else document.getElementById("chunker-fields").innerHTML=""}
+async function onEmbChange(){const n=document.getElementById("emb-sel").value;if(n){try{const s=await getSchema("embedder",n);renderFields("emb-fields",s.inputs||[])}catch(e){}}else document.getElementById("emb-fields").innerHTML=""}
+async function onVSChange(){const n=document.getElementById("vs-sel").value;if(n){try{const s=await getSchema("vector_store",n);renderFields("vs-fields",s.inputs||[])}catch(e){}}else document.getElementById("vs-fields").innerHTML=""}
+async function onRMChange(){const n=document.getElementById("rm-sel").value;if(n){try{const s=await getSchema("record_manager",n);renderFields("rm-fields",s.inputs||[])}catch(e){}}else document.getElementById("rm-fields").innerHTML=""}
+
+// Upload
+let selFile=null
+function onFileSelect(inp){
+  selFile=inp.files[0]
+  document.getElementById("file-name").textContent=selFile?"Selected: "+selFile.name:""
+}
+async function doUpload(){
+  if(!activeKB)return
+  if(!selFile){msg("upload-msg","Select a file first","err");return}
+  const btn=document.getElementById("btn-upload")
+  btn.disabled=true;btn.innerHTML=`<span class="spin"></span> Uploading...`
+  const fd=new FormData();fd.append("file",selFile)
+  try{
+    const r=await fetch(`${BASE}/knowledge_bases/${activeKB.id}/upload`,{method:"POST",body:fd})
+    if(!r.ok){const e=await r.json();throw new Error(e.detail)}
+    msg("upload-msg","Uploaded successfully","success")
+    selFile=null;document.getElementById("file-input").value="";document.getElementById("file-name").textContent=""
+    await loadDocs()
+  }catch(e){msg("upload-msg",e.message,"err")}
+  finally{btn.disabled=false;btn.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload`}
+}
+
+async function loadDocs(){
+  if(!activeKB)return
+  try{
+    const d=await api(`/knowledge_bases/${activeKB.id}/documents`)
+    docs=d.documents||[]
+    renderDocs()
+  }catch(e){}
+}
+
+function renderDocs(){
+  const el=document.getElementById("docs-list")
+  if(!docs.length){el.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No documents yet</p></div>`;return}
+  el.innerHTML=docs.map(d=>`
+  <div class="doc-row">
+    <div class="doc-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+    <div class="doc-info">
+      <div class="doc-name">${d.file_name}</div>
+      <div class="doc-meta">${(d.file_type||"").toUpperCase()} · ${d.file_size_mb||0} MB</div>
+    </div>
+    <span class="badge ${d.status==='ready'?'badge-ready':'badge-pending'}">${d.status}</span>
+    <button class="btn btn-danger btn-sm" onclick="delDoc('${d.id}')">Delete</button>
+  </div>`).join("")
+}
+
+async function delDoc(id){
+  if(!activeKB||!confirm("Delete this document?"))return
+  try{await api(`/knowledge_bases/${activeKB.id}/documents/${id}`,{method:"DELETE"});await loadDocs()}
+  catch(e){alert(e.message)}
+}
+
+// Ingest
+async function doIngest(){
+  if(!activeKB)return
+  const doc_id=document.getElementById("ingest-doc").value
+  const loader_name=document.getElementById("loader-sel").value
+  const chunker_name=document.getElementById("chunker-sel").value
+  if(!doc_id||!loader_name||!chunker_name){msg("ingest-msg","All fields are required","err");return}
+  const btn=document.getElementById("btn-ingest")
+  btn.disabled=true;btn.innerHTML=`<span class="spin"></span> Processing...`
+  msg("ingest-msg","")
+  try{
+    const body={loader_name,chunker_name,loader_config:collectFields("loader-fields"),chunker_config:collectFields("chunker-fields"),doc_id}
+    const d=await api(`/knowledge_bases/${activeKB.id}/ingest_document`,{method:"POST",body:JSON.stringify(body)})
+    msg("ingest-msg",`Ingested ${d.chunks_count} chunks successfully.`,"success")
+    await loadDocs()
+  }catch(e){msg("ingest-msg",e.message,"err")}
+  finally{btn.disabled=false;btn.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><polygon points="5 3 19 12 5 21 5 3"/></svg> Process`}
+}
+
+// Chunks
+async function loadChunks(){
+  if(!activeKB)return
+  const doc_id=document.getElementById("chunk-doc").value
+  const el=document.getElementById("chunk-container")
+  if(!doc_id){el.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg><p>Select a document</p></div>`;return}
+  el.innerHTML=`<div class="empty"><span class="spin spin-accent"></span></div>`
+  msg("chunk-msg","")
+  try{
+    const d=await api(`/knowledge_bases/${activeKB.id}/chunks?doc_id=${doc_id}`)
+    const chunks=d.chunks||[]
+    if(!chunks.length){el.innerHTML=`<div class="empty"><p>No chunks yet. Run ingest first.</p></div>`;return}
+    el.innerHTML=`<div style="font-size:11px;color:var(--text3);margin-bottom:8px;">${chunks.length} chunks</div><div class="chunk-list">`+
+      chunks.map(c=>`<div class="chunk-item" onclick="openChunk('${c.id}')">
+        <div class="chunk-no">chunk #${c.chunk_no}</div>
+        <div class="chunk-text">${(c.page_content||"").slice(0,150)}${(c.page_content||"").length>150?"...":""}</div>
+      </div>`).join("")+`</div>`
+  }catch(e){msg("chunk-msg",e.message,"err")}
+}
+
+async function openChunk(id){
+  if(!activeKB)return
+  currentChunkId=id
+  msg("chunk-edit-msg","")
+  try{
+    const d=await api(`/knowledge_bases/${activeKB.id}/chunks/${id}`)
+    document.getElementById("chunk-content").value=d.chunk?.page_content||""
+    document.getElementById("modal-chunk").style.display="flex"
+  }catch(e){alert(e.message)}
+}
+
+async function saveChunk(){
+  if(!activeKB||!currentChunkId)return
+  const content=document.getElementById("chunk-content").value
+  try{
+    await api(`/knowledge_bases/${activeKB.id}/chunks/${currentChunkId}`,{method:"PUT",body:JSON.stringify({content,meta_data:{}})})
+    msg("chunk-edit-msg","Saved","success")
+    setTimeout(()=>{closeModal("modal-chunk");loadChunks()},700)
+  }catch(e){msg("chunk-edit-msg",e.message,"err")}
+}
+
+async function deleteChunk(){
+  if(!activeKB||!currentChunkId||!confirm("Delete this chunk?"))return
+  try{
+    await api(`/knowledge_bases/${activeKB.id}/chunks/${currentChunkId}`,{method:"DELETE"})
+    closeModal("modal-chunk");loadChunks()
+  }catch(e){msg("chunk-edit-msg",e.message,"err")}
+}
+
+// Config
+async function saveConfig(){
+  if(!activeKB)return
+  const body={
+    embedder_name:document.getElementById("emb-sel").value,
+    vector_store_name:document.getElementById("vs-sel").value,
+    record_manager_name:document.getElementById("rm-sel").value,
+    embedder_config:collectFields("emb-fields"),
+    vector_store_config:collectFields("vs-fields"),
+    record_manager_config:collectFields("rm-fields"),
+  }
+  if(!body.embedder_name||!body.vector_store_name||!body.record_manager_name){msg("config-msg","All three are required","err");return}
+  const btn=document.getElementById("btn-cfg")
+  btn.disabled=true;btn.innerHTML=`<span class="spin"></span> Saving...`
+  try{
+    const stored=activeKB.upsert_config_snapshot
+    await api(`/knowledge_bases/${activeKB.id}/config`,{method:stored?"PUT":"POST",body:JSON.stringify(body)})
+    msg("config-msg","Configuration saved","success")
+    await loadKBList();activeKB=kbList.find(k=>k.id===activeKB.id)
+  }catch(e){msg("config-msg",e.message,"err")}
+  finally{btn.disabled=false;btn.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save config`}
+}
+
+// Upsert
+async function doUpsert(){
+  if(!activeKB)return
+  const doc_id=document.getElementById("embed-doc").value
+  if(!doc_id){msg("embed-msg","Select a document","err");return}
+  const btn=document.getElementById("btn-upsert")
+  btn.disabled=true;btn.innerHTML=`<span class="spin"></span> Embedding...`
+  msg("embed-msg","")
+  try{
+    const d=await api(`/knowledge_bases/${activeKB.id}/upsert`,{method:"POST",body:JSON.stringify({doc_id})})
+    msg("embed-msg","Embedding complete","success")
+    document.getElementById("upsert-out").innerHTML=`<div class="mono-result">${JSON.stringify(d,null,2)}</div>`
+    await loadKBList()
+  }catch(e){msg("embed-msg",e.message,"err")}
+  finally{btn.disabled=false;btn.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg> Embed now`}
+}
+</script>
+</body>
+</html>
