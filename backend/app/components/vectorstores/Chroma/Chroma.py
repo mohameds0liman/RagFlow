@@ -16,7 +16,6 @@ class ChromaVectorStoreComponent(BaseComponent):
             "kwargs": {
                 "collection_name": config["collection_name"],
                 "persist_directory": config["persist_directory"],
-                "create_collection_if_not_exists": True,
             }
         }
     

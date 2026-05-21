@@ -1,42 +1,77 @@
 from app.components.registry import registry
 from langchain_community.docstore.document import Document
-
+from langchain_core.indexing.api import index as langchain_index
 class PipelineFactory:
 
-    ### The Main Factories of The Rag Pipeline ###
-    def loader_factory(self , config:dict ={}) -> list[Document]:
-        loader = registry.build(category=config["category"], name=config["name"], config=config["build_config"])
-        documents = loader.load()
-        return documents
+    # ### The Main Factories of The Rag Pipeline ###
+    # def loader_factory(self , config:dict ={}) -> list[Document]:
+    #     loader = registry.build(category=config["category"], name=config["name"], config=config["build_config"])
+    #     documents = loader.load()
+    #     return documents
 
-    def chunker_factory(self,config:dict ={}) -> list[Document]:
-        config = self.config
-        chunker = registry.build(category=config["category"], name=config["name"], config=config["build_config"])
-        chunks = chunker.split_documents(config["documents"])
-        return chunks
+    # def chunker_factory(self,config:dict ={}) -> list[Document]:
+    #     chunker = registry.build(category=config["category"], name=config["name"], config=config["build_config"])
+    #     chunks = chunker.split_documents(config["documents"])
+    #     return chunks
 
-    def embedder_factory(self,config:dict ={}):
-        config = self.config
-        embedder = registry.build(category=config["category"], name=config["name"], config=config["build_config"])
-        embedding = embedder.embed_documents(config["text"])
-        return embedding
+    # def embedder_factory(self,config:dict ={}):
+    #     embedder = registry.build(category=config["category"], name=config["name"], config=config["build_config"])
+    #     # embedding = embedder.embed_documents(config["text"])
+    #     return embedder
 
-    def vector_store_factory(self,config:dict ={}):
-        config = self.config
-        vector_store = registry.build(category=config["category"], name=config["name"], config=config["build_config"])
-        return vector_store
+    # def vector_store_factory(self,config:dict ={}):
+    #     vector_store = registry.build(category=config["category"], name=config["name"], config=config["build_config"])
+    #     return vector_store
 
+    # def record_manager_factory(self,config:dict={}):
+    #     record_manager=registry.build(category=config["category"] , name=config["name"], config=config["build_config"])
+    #     return record_manager
 
 ####################################################################################
 # Pipelines
 
-    def build_loader_pipeline(self,build_config: dict) -> list[Document]:
-        config = {
-            "category": "loader",
-            "name": build_config["name"],
-            "build_config": build_config["build_config"]
-        }
-        documents=self.loader_factory(config)
+    def build_loader_pipeline(self,Loader_config: dict) -> list[Document]:
+        # Load documents
+        loader = registry.build(
+            category="loader",
+            name=Loader_config["loader"]["name"],
+            config=Loader_config["loader"]["build_config"])
+        documents = loader.load()
+        # Split into chunks
+        chunker = registry.build(
+            category="chunker",
+            name=Loader_config["chunker"]["name"],
+            config=Loader_config["chunker"]["build_config"])
+        chunks = chunker.split_documents(documents)
+        return chunks
         
-        return documents
+
+    def build_upsert_pipeline(self,chunks ,upsert_config: dict) -> dict:
         
+        # Build embedder
+        embedder = registry.build(
+            category="embedder",
+            name=upsert_config["embedder"]["name"],
+            config=upsert_config["embedder"]["build_config"])
+        # Build + instantiate vector store (inject embedder)
+        vs_def = registry.build(
+            category="vector_store",
+            name=upsert_config["vector_store"]["name"],
+            config=upsert_config["vector_store"]["build_config"])
+        vector_store = vs_def["cls"](embedding_function=embedder, **vs_def["kwargs"])
+        # Build record manager + ensure schema exists
+        record_manager = registry.build(
+            category="record_manager",
+            name=upsert_config["record_manager"]["name"],
+            config=upsert_config["record_manager"]["build_config"])
+        record_manager.create_schema()
+        # Run LangChain incremental indexing
+        result = langchain_index(
+            docs_source=chunks,
+            record_manager=record_manager,
+            vector_store=vector_store,
+            batch_size=100,
+            cleanup="incremental", # cleanup: Literal['incremental', 'full', 'scoped_full']   i have to do it later
+            source_id_key="source",
+        )
+        return result

@@ -88,21 +88,22 @@ class MessageRole(str, enum.Enum):
 # user_kb_access
 # ---------------------------------------------------------------------------
 
-class UserKBAccess(Base):
-    __tablename__ = "user_kb_access"
+class UserAccess(Base):
+    __tablename__ = "user_access"
 
     id               = Column(UUID(as_uuid=False), primary_key=True, default=_uuid)
     user_id          = Column(UUID(as_uuid=False), ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
     document_store_id = Column(UUID(as_uuid=False), ForeignKey("document_store.id", ondelete="CASCADE"), nullable=False, index=True)
+    chatbot_id       =Column(UUID(as_uuid=False), ForeignKey("chatbot.id", ondelete="CASCADE"), nullable=False, index=True)
     granted_at       = Column(DateTime, nullable=False, default=_now)
 
     # unique constraint to prevent duplicate access records
     __table_args__ = (
-        UniqueConstraint('user_id', 'document_store_id', name='uq_user_kb_access'),
+        UniqueConstraint('user_id', 'document_store_id', name='uq_user_access'),
     )
 
     def __repr__(self):
-        return f"<UserKBAccess id={self.id} user_id={self.user_id} store_id={self.document_store_id}>"
+        return f"<UserAccess id={self.id} user_id={self.user_id} store_id={self.document_store_id}>"
 
 # ---------------------------------------------------------------------------
 
@@ -155,7 +156,6 @@ class DocumentStore(Base):
     name                 = Column(String(255), nullable=False)
     description          = Column(Text, nullable=True)
     status               = Column(Enum(DocumentStoreStatus), nullable=False, default=DocumentStoreStatus.active)
-    loader_config_snapshot = Column(JSON, nullable=True)     # Snapshot of loader config at time of ingestion
     upsert_config_snapshot = Column(JSON, nullable=True)     # Snapshot of embedder/vector store config at time of ingestion
     vector_store_config  = Column(JSON, nullable=True)   # e.g. {"provider": "pgvector", "collection": "..."}
     embedding_config     = Column(JSON, nullable=True)   # e.g. {"provider": "openai", "model": "text-embedding-3-small"}
@@ -168,7 +168,6 @@ class DocumentStore(Base):
     uploaded_documents  = relationship("UploadedDocument", back_populates="document_store", cascade="all, delete-orphan")
     loaders             = relationship("DocumentLoader",   back_populates="document_store", cascade="all, delete-orphan")
     chunks              = relationship("DocumentChunk",    back_populates="document_store", cascade="all, delete-orphan")
-    upsertion_records   = relationship("UpsertionRecord",  back_populates="document_store", cascade="all, delete-orphan")
     chatbots            = relationship("Chatbot",          back_populates="document_store")
 
     def __repr__(self):
@@ -193,9 +192,10 @@ class UploadedDocument(Base):
     updated_date = Column(DateTime, nullable=False, default=_now, onupdate=_now)
 
     # relationships
+    chunks = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
     document_store = relationship("DocumentStore",  back_populates="uploaded_documents")
-    loader         = relationship("DocumentLoader", back_populates="uploaded_doc",
-                                  primaryjoin="UploadedDocument.id == foreign(DocumentLoader.uploaded_doc_id)",
+    loader         = relationship("DocumentLoader", back_populates="document",
+                                  primaryjoin="UploadedDocument.id == foreign(DocumentLoader.doc_id)",
                                   uselist=False)
 
     def __repr__(self):
@@ -210,22 +210,20 @@ class DocumentLoader(Base):
     __tablename__ = "document_loader"
 
     id              = Column(UUID(as_uuid=False), primary_key=True, default=_uuid)
-    doc_id          = Column(UUID(as_uuid=False), ForeignKey("document_store.id", ondelete="CASCADE"), nullable=False, index=True)
-    uploaded_doc_id = Column(UUID(as_uuid=False), ForeignKey("uploaded_document.id", ondelete="SET NULL"), nullable=True, index=True)
+    store_id          = Column(UUID(as_uuid=False), ForeignKey("document_store.id", ondelete="CASCADE"), nullable=False, index=True)
+    doc_id = Column(UUID(as_uuid=False), ForeignKey("uploaded_document.id", ondelete="SET NULL"), nullable=True, index=True)
     name         = Column(String(255), nullable=False)
     loader_type  = Column(String(64),  nullable=False)   # e.g. "pdf", "web", "s3", "docx", "csv"
     loader_config = Column(JSON, nullable=True)          # loader-specific options
-    raw_config   = Column(JSON, nullable=True)          # Original raw config before processing
-    source_path  = Column(String(1024), nullable=True)   # file path, URL, bucket key, etc.
+    file_path    = Column(String(1024), nullable=True)   # file path, URL, bucket key, etc.
     status       = Column(Enum(LoaderStatus), nullable=False, default=LoaderStatus.pending)
     created_date = Column(DateTime, nullable=False, default=_now)
     updated_date = Column(DateTime, nullable=False, default=_now, onupdate=_now)
 
     # relationships
     document_store  = relationship("DocumentStore",   back_populates="loaders")
-    uploaded_doc    = relationship("UploadedDocument", back_populates="loader", foreign_keys=[uploaded_doc_id])
+    document        = relationship("UploadedDocument", back_populates="loader", foreign_keys=[doc_id])
     splitter        = relationship("DocumentSplitter", back_populates="loader", uselist=False, cascade="all, delete-orphan")
-    chunks          = relationship("DocumentChunk",   back_populates="loader")
 
     def __repr__(self):
         return f"<DocumentLoader id={self.id} type={self.loader_type} status={self.status}>"
@@ -249,7 +247,6 @@ class DocumentSplitter(Base):
 
     # relationships
     loader = relationship("DocumentLoader", back_populates="splitter")
-    chunks = relationship("DocumentChunk",  back_populates="splitter")
 
     def __repr__(self):
         return f"<DocumentSplitter id={self.id} type={self.splitter_type} chunk_size={self.chunk_size}>"
@@ -264,50 +261,28 @@ class DocumentChunk(Base):
 
     id           = Column(UUID(as_uuid=False), primary_key=True, default=_uuid)
     store_id     = Column(UUID(as_uuid=False), ForeignKey("document_store.id",   ondelete="CASCADE"), nullable=False, index=True)
-    loader_id    = Column(UUID(as_uuid=False), ForeignKey("document_loader.id",  ondelete="CASCADE"), nullable=False, index=True)
-    splitter_id  = Column(UUID(as_uuid=False), ForeignKey("document_splitter.id", ondelete="SET NULL"), nullable=True, index=True)
+    doc_id       = Column(UUID(as_uuid=False), ForeignKey("uploaded_document.id", ondelete="CASCADE"), nullable=True, index=True)
     page_content     = Column(Text, nullable=False)
-    chunk_metadata   = Column(JSON, nullable=True)   # source, page number, headings, etc.
+    meta_data   = Column(JSON, nullable=True)   # source, page number, headings, etc.
     chunk_no         = Column(Integer, nullable=False, default=0)
     status       = Column(Enum(ChunkStatus), nullable=False, default=ChunkStatus.pending)
     created_date = Column(DateTime, nullable=False, default=_now)
     updated_date = Column(DateTime, nullable=False, default=_now, onupdate=_now)
 
     # relationships
+    document       = relationship("UploadedDocument", back_populates="chunks")
     document_store = relationship("DocumentStore",   back_populates="chunks")
-    loader         = relationship("DocumentLoader",  back_populates="chunks")
-    splitter       = relationship("DocumentSplitter", back_populates="chunks")
+
 
     def __repr__(self):
         return f"<DocumentChunk id={self.id} chunk_no={self.chunk_no} status={self.status}>"
 
 
-# ---------------------------------------------------------------------------
-# upsertion_record
-# ---------------------------------------------------------------------------
-
-class UpsertionRecord(Base):
-    __tablename__ = "upsertion_record"
-
-    id          = Column(UUID(as_uuid=False), primary_key=True, default=_uuid)
-    store_id    = Column(UUID(as_uuid=False), ForeignKey("document_store.id", ondelete="CASCADE"), nullable=False, index=True)
-    key         = Column(String(512), nullable=False, index=True)
-    namespace   = Column(String(255), nullable=True)
-    updated_at  = Column(Float, nullable=False, default=lambda: datetime.utcnow().timestamp())
-    group_id    = Column(String(255), nullable=True, index=True)
-    source_hash = Column(String(255), nullable=True)
-
-    # relationships
-    document_store = relationship("DocumentStore", back_populates="upsertion_records")
-
-    def __repr__(self):
-        return f"<UpsertionRecord id={self.id} key={self.key}>"
 
 
 class ChatbotStatus(str, enum.Enum):
     active    = "active"
     inactive  = "inactive"
-    archived  = "archived"
 
 # ---------------------------------------------------------------------------
 # chatbot
@@ -322,9 +297,7 @@ class Chatbot(Base):
     name                = Column(String(255), nullable=False)
     description         = Column(Text, nullable=True)
     status              = Column(Enum(ChatbotStatus), nullable=False, default=ChatbotStatus.active)
-    is_published        = Column(Boolean, nullable=False, default=False)
     published_at         = Column(DateTime, nullable=True)
-    is_active           = Column(Boolean, nullable=False, default=True)
 
     # --- LangChain configs stored as JSON blobs ---
     # vector_store_config:  {"provider": "pgvector"|"chroma"|"pinecone", "collection": "...", "top_k": 4}
@@ -336,6 +309,8 @@ class Chatbot(Base):
     # chain_config:         {"chain_type": "ConversationalRetrievalChain", "memory_type": "buffer"|"summary",
     #                         "prompt_template": "...", "return_source_documents": true}
     chain_config        = Column(JSON, nullable=True)
+
+    memory_config           = Column(JSON, nullable=True)
 
     created_date = Column(DateTime, nullable=False, default=_now)
     updated_date = Column(DateTime, nullable=False, default=_now, onupdate=_now)
@@ -424,8 +399,8 @@ if __name__ == "__main__":
     with Session(engine) as session:
         admin = User(
             username      = "admin",
-            email         = "admin@ragflow.dev",
-            password_hash = "hashed_password_here",
+            email         = "admin@gmail.com",
+            password_hash = "admin123",
             role          = UserRole.admin,
             is_active     = True,
             is_verified   = True,
@@ -455,12 +430,12 @@ if __name__ == "__main__":
         session.flush()
 
         loader = DocumentLoader(
-            doc_id          = store.id,
-            uploaded_doc_id = uploaded_doc.id,
+            store_id          = store.id,
+            doc_id = uploaded_doc.id,
             name            = "Product PDF Loader",
             loader_type = "pdf",
             loader_config = {"extract_images": False},
-            source_path = "/docs/product_manual.pdf",
+            file_path = "/docs/product_manual.pdf",
             status      = LoaderStatus.pending,
         )
         session.add(loader)
@@ -481,7 +456,7 @@ if __name__ == "__main__":
             document_store_id = store.id,
             name              = "Support Bot",
             description       = "Answers product questions from the docs",
-            is_active         = True,
+            status         = ChatbotStatus.active,
             vector_store_config = {"provider": "pgvector", "collection": "product_docs", "top_k": 4},
             llm_config          = {"provider": "openai", "model": "gpt-4o", "temperature": 0.0, "max_tokens": 1024},
             chain_config        = {

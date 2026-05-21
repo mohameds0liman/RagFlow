@@ -12,5 +12,5 @@ class OllamaEmbeddingComponent(BaseComponent):
     def build(self, config: dict):
         return OllamaEmbeddings(
             base_url=config["base_url"],
-            model=config["model_name"],
+            model=config["model"],
         )

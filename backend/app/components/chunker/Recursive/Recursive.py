@@ -2,7 +2,7 @@ from app.components.base import BaseComponent, InputParam
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
-class RecursiveCharacterTextSplitter(BaseComponent):
+class RecursiveTextSplitter(BaseComponent):
 
     category="chunker"
     name="RecursiveCharacterTextSplitter"
