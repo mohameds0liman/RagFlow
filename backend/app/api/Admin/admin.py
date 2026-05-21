@@ -287,6 +287,34 @@ def delete_knowledge_base_path(knowledge_base_id: str, db: Session = Depends(get
     db.commit()
     return {"status": "deleted", "knowledge_base_id": knowledge_base_id}
 
+
+# Return basic processing status for frontend badges.
+@router.get("/knowledge_bases/{knowledge_base_id}/status")
+def knowledge_base_status(knowledge_base_id: str, db: Session = Depends(get_db)):
+    store = _validate_store(db=db, knowledge_base_id=knowledge_base_id)
+    upserion_config_ready= bool(store.upsert_config_snapshot)
+    vector_ready = bool(store.vector_store_config and store.embedding_config and store.record_manager_config)
+    total_documents = db.query(func.count(UploadedDocument.id)).filter(UploadedDocument.store_id == store.id).scalar()
+    total_chunks = db.query(func.count(DocumentChunk.id)).filter(DocumentChunk.store_id == store.id).scalar()
+    embedded_chunks = db.query(func.count(DocumentChunk.id)).filter(
+        DocumentChunk.store_id == store.id,
+        DocumentChunk.status == ChunkStatus.embedded,
+    ).scalar()
+
+    ## add more status Later
+    return {
+        "status": "ok",
+        "knowledge_base_id": store.id,
+        "upserion_config_ready":upserion_config_ready,
+        "vector_store_configured": vector_ready,
+        "document_store_status": store.status,
+        "totals": {
+            "documents": total_documents,
+            "chunks": total_chunks,
+            "embedded_chunks": embedded_chunks,
+        },
+    }
+
 # #get KB status with KB id
 # @router.get("/knowledge_bases/{knowledge_base_id}/status")
 # def get_knowledge_base_status(knowledge_base_id: str, db: Session = Depends(get_db)):
@@ -327,6 +355,32 @@ def create_upsertion_config(
     db.commit()
     db.refresh(store)
     return {"status": "config_saved", "knowledge_base": to_dict(store, extras=store_counts(store, db))}
+
+
+@router.put("/knowledge_bases/{knowledge_base_id}/config")
+def update_upsertion_config(
+    knowledge_base_id: str,
+    request: UpsertionConfig,
+    db: Session = Depends(get_db),
+):
+    store = _validate_store(db=db, knowledge_base_id=knowledge_base_id)
+    store.upsert_config_snapshot = {
+        "embedder":       {"name": request.embedder_name,       "build_config": request.embedder_config},
+        "vector_store":   {"name": request.vector_store_name,   "build_config": request.vector_store_config},
+        "record_manager": {"name": request.record_manager_name, "build_config": request.record_manager_config},
+    }
+    store.embedding_config = {
+        "embedder": {"name": request.embedder_name, "build_config": request.embedder_config},
+    }
+    store.vector_store_config = {
+        "vector_store": {"name": request.vector_store_name, "build_config": request.vector_store_config},
+    }
+    store.record_manager_config = {
+        "record_manager": {"name": request.record_manager_name, "build_config": request.record_manager_config},
+    }
+    db.commit()
+    db.refresh(store)
+    return {"status": "config_updated", "knowledge_base": to_dict(store, extras=store_counts(store, db))}
 
 
 @router.post("/knowledge_bases/{knowledge_base_id}/upsert")
@@ -580,3 +634,19 @@ def add_chunk(
     ))
     db.commit()
     return {"chunk": "Added"}
+
+
+
+########################
+# Dashboard 
+########################
+
+@router.get("/dashboard/stats")
+def dashboard_stats(db: Session = Depends(get_db)):
+    return {
+        "knowledge_bases": db.query(func.count(DocumentStore.id)).scalar(),
+        "documents":       db.query(func.count(UploadedDocument.id)).scalar(),
+        "loaders":         db.query(func.count(DocumentLoader.id)).scalar(),
+        "chunks":          db.query(func.count(DocumentChunk.id)).scalar(),
+        "chatbots":        db.query(func.count(Chatbot.id)).scalar(),
+    }

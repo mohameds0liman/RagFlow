@@ -51,6 +51,12 @@ extras: store_counts
 `POST /knowledge_bases/{knowledge_base_id}/upsert`
 trigger_upsert(id, doc_id) → embed pending chunks of that doc into vector store
 marks chunks as embedded
+
+`PUT /knowledge_bases/{knowledge_base_id}/config`
+update_upsertion_config(id, body) → update existing upsertion config
+same request body as POST
+extras: store_counts
+
 ---
 ## Uploaded Documents
 `POST /knowledge_bases/{knowledge_base_id}/upload`
@@ -98,3 +104,9 @@ add new component record manager
 ## fix some bugs in the components 
 
 ## the Full flow is working from the Uploading to the upserting
+
+
+
+#### add put endpoint to update the Upsertion config  `@router.put("/knowledge_bases/{knowledge_base_id}/config")`
+#### add get endpoint to get some information of the Knowledge base `@router.get("/knowledge_bases/{knowledge_base_id}/status")`
+#### add get endpoint as a `Dashboard` and will updated later `@router.get("/dashboard/stats")`
