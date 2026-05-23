@@ -84,7 +84,6 @@ class PipelineFactory:
         Supports both flat config format ({"name":..., "build_config":...})
         and nested format from DocumentStore ({"vector_store": {"name":..., ...}}).
         """
-        from langchain.chains import ConversationalRetrievalChain
         # 1. LLM
         llm_cfg = chatbot.llm_config
         if not llm_cfg or "name" not in llm_cfg:
@@ -94,23 +93,17 @@ class PipelineFactory:
             name=llm_cfg["name"],
             config=llm_cfg.get("build_config", {}),
         )
-        # 2. Embedder (may be nested from DocumentStore copy)
+        # 2. Embedder (get in the chat with store id stored in the chatbot )
         emb_cfg = chatbot.embedding_config
-        if not emb_cfg:
-            raise ValueError("Chatbot has no embedding_config")
-        if "embedder" in emb_cfg:
-            emb_cfg = emb_cfg["embedder"]
+        emb_cfg = emb_cfg["embedder"]
         embedder = registry.build(
             category="embedder",
             name=emb_cfg["name"],
             config=emb_cfg.get("build_config", {}),
         )
-        # 3. Vector Store → Retriever (may be nested from DocumentStore copy)
+        # 3. Vector Store → Retriever (get in the chat with store id stored in the chatbot )
         vs_cfg = chatbot.vector_store_config
-        if not vs_cfg:
-            raise ValueError("Chatbot has no vector_store_config")
-        if "vector_store" in vs_cfg:
-            vs_cfg = vs_cfg["vector_store"]
+        vs_cfg = vs_cfg["vector_store"]
         vs_def = registry.build(
             category="vector_store",
             name=vs_cfg["name"],
@@ -118,12 +111,20 @@ class PipelineFactory:
         )
         vector_store = vs_def["cls"](embedding_function=embedder, **vs_def["kwargs"])
         retriever = vector_store.as_retriever(
-            search_kwargs={"k": vs_cfg.get("build_config", {}).get("top_k", 4)}
+            search_kwargs={"k": vs_cfg.get("build_config", {}).get("top_k", 4)}  ## later will let admin set the top_k while creating chatbot
         )
+
+            # llm=llm,
+            # retriever=retriever,
+            # chain_type=chain_type,
+            # verbose=verbose,
+        # chain_type  stuff - map_reduce - refine - map_rerank
+        chain_cfg=chatbot.chain_config
+        chain_conf={"llm":llm ,"retriever":retriever ,"chain_type": "stuff"}#chain_cfg["chain_type"] , chain_cfg["k"]
         # 4. Chain (no memory — endpoint passes chat_history via invoke)
-        chain = ConversationalRetrievalChain.from_llm(
-            llm=llm,
-            retriever=retriever,
-            return_source_documents=True,
+        chain =registry.build(
+            category="chain",
+            name="ConversationalRetrievalChain",
+            config=chain_conf
         )
         return chain

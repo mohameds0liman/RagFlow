@@ -16,23 +16,27 @@ from app.db.models import (
     MessageRole,
     User,
 )
-from app.api.Admin.admin import (
-    to_dict,
-    _validate_chatbot,
-    factory,
-)
+from app.core.factory import PipelineFactory
+from app.api.Admin.admin import to_dict , _validate_chatbot
 from app.api.auth import require_admin
 router = APIRouter(prefix="/admin", tags=["Chat"])
-# -------------------------------------------------------------------------
+##########################################################################
 # Pydantic Schemas
-# -------------------------------------------------------------------------
+##########################################################################
 class CreateSessionRequest(BaseModel):
     title: str | None = None
 class ChatRequest(BaseModel):
     message: str
-# -------------------------------------------------------------------------
+
+######################################################################## 
+# define Factory 
+
+factory = PipelineFactory()
+
+########################################################################
+##########################################################################
 # Helpers
-# -------------------------------------------------------------------------
+##########################################################################
 def _validate_session(db: Session, session_id: str, chatbot_id: str) -> ChatSession:
     session = db.query(ChatSession).filter(
         ChatSession.id == session_id,
@@ -55,20 +59,22 @@ def _session_to_dict(session, db: Session | None = None) -> dict:
     return d
 def _message_to_dict(msg) -> dict:
     return to_dict(msg)
-# -------------------------------------------------------------------------
+
+
+##########################################################################
 # Endpoints
-# -------------------------------------------------------------------------
+##########################################################################
 @router.post("/chatbots/{chatbot_id}/sessions")
 def create_session(
     chatbot_id: str,
     request: CreateSessionRequest,
-    admin_id: User = Depends(require_admin),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     chatbot = _validate_chatbot(db=db, chatbot_id=chatbot_id)
     session = ChatSession(
         chatbot_id=chatbot.id,
-        user_id=admin_id.id,
+        user_id=admin_user.id,
         title=request.title or f"Chat with {chatbot.name}",
     )
     db.add(session)
@@ -78,13 +84,13 @@ def create_session(
 @router.get("/chatbots/{chatbot_id}/sessions")
 def list_sessions(
     chatbot_id: str,
-    admin_id: User = Depends(require_admin),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     _validate_chatbot(db=db, chatbot_id=chatbot_id)
     query = db.query(ChatSession).filter(ChatSession.chatbot_id == chatbot_id)
-    if admin_id:
-        query = query.filter(ChatSession.user_id == admin_id.id)
+    if admin_user:
+        query = query.filter(ChatSession.user_id == admin_user.id)  ## only return related session to the admin with his id
     sessions = query.order_by(ChatSession.updated_date.desc()).all()
     return {
         "status": "list",
@@ -95,7 +101,7 @@ def list_sessions(
 def get_session(
     chatbot_id: str,
     session_id: str,
-    admin_id: User = Depends(require_admin),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     _validate_chatbot(db=db, chatbot_id=chatbot_id)
@@ -106,7 +112,7 @@ def update_session(
     chatbot_id: str,
     session_id: str,
     payload: dict = Body(default_factory=dict),
-    admin_id: User = Depends(require_admin),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     _validate_chatbot(db=db, chatbot_id=chatbot_id)
@@ -120,7 +126,7 @@ def update_session(
 def delete_session(
     chatbot_id: str,
     session_id: str,
-    admin_id: User = Depends(require_admin),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     _validate_chatbot(db=db, chatbot_id=chatbot_id)
@@ -132,7 +138,7 @@ def delete_session(
 def list_messages(
     chatbot_id: str,
     session_id: str,
-    admin_id: User = Depends(require_admin),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     _validate_chatbot(db=db, chatbot_id=chatbot_id)
@@ -150,7 +156,7 @@ def send_message(
     chatbot_id: str,
     session_id: str,
     request: ChatRequest,
-    admin_id: User = Depends(require_admin),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     chatbot = _validate_chatbot(db=db, chatbot_id=chatbot_id)

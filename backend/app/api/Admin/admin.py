@@ -147,20 +147,11 @@ def _validate_store(db: Session, knowledge_base_id: str) -> DocumentStore:
         raise HTTPException(status_code=404, detail="Knowledge base not found")
     return store
 
-
-def _validate_loader(db: Session, loader_id: str) -> DocumentLoader:
-    loader = db.query(DocumentLoader).filter(DocumentLoader.id == loader_id).first()
-    if not loader:
-        raise HTTPException(status_code=404, detail="Document loader not found")
-    return loader
-
-
 def _validate_chatbot(db: Session, chatbot_id: str) -> Chatbot:
     chatbot = db.query(Chatbot).filter(Chatbot.id == chatbot_id).first()
     if not chatbot:
         raise HTTPException(status_code=404, detail="Chatbot not found")
     return chatbot
-
 
 ########################################################################
 # test

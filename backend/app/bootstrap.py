@@ -12,6 +12,8 @@ from app.components.Chatmodels.ChatOllama.ChatOllama import ChatModelOllama
 
 from app.components.record_manager.langchainrecordmanager.langchain_record_manager import LangChainRecordManagerComponent
 
+# from app.components.chain.RetrievalQAChain.RetrievalQAChain import RetrievalQAChainComponent
+from app.components.chain.ConversationalRetrievalChain.ConversationalRetrievalChain import ConversationalRetrievalChainComponent
 
 def register_all():
     
@@ -26,3 +28,6 @@ def register_all():
     registry.register(ChatModelOllama)
 
     registry.register(LangChainRecordManagerComponent)
+
+    # registry.register(RetrievalQAChainComponent)
+    registry.register(ConversationalRetrievalChainComponent)

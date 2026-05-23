@@ -16,17 +16,12 @@ from app.db.models import (
     ChatSession,
     User,
 )
-from app.api.Admin.admin import (
-    to_dict,
-    _validate_store,
-    _validate_chatbot,
-    factory,
-)
+from app.api.Admin.admin import to_dict , _validate_chatbot
 from app.api.auth import require_admin
 router = APIRouter(prefix="/admin", tags=["ChatBot"])
-# -------------------------------------------------------------------------
+#########################################################################
 # Pydantic Schemas
-# -------------------------------------------------------------------------
+#########################################################################
 class CreateChatbotRequest(BaseModel):
     name: str
     description: str | None = None
@@ -45,9 +40,9 @@ class UpdateChatbotRequest(BaseModel):
     chain_config: dict | None = None
     memory_config: dict | None = None
     prompt_config: dict | None = None
-# -------------------------------------------------------------------------
+#########################################################################
 # Helpers
-# -------------------------------------------------------------------------
+#########################################################################
 def _chatbot_counts(bot, db: Session) -> dict:
     return {
         "sessions_count": db.query(func.count(ChatSession.id)).filter(
@@ -62,9 +57,9 @@ def _chatbot_to_dict(bot, db: Session | None = None) -> dict:
     if bot.creator:
         d["created_by_name"] = bot.creator.username
     return d
-# -------------------------------------------------------------------------
+#########################################################################
 # Endpoints
-# -------------------------------------------------------------------------
+#########################################################################
 @router.post("/chatbots")
 def create_chatbot(
     request: CreateChatbotRequest,
@@ -86,7 +81,12 @@ def create_chatbot(
         vector_store_config=store_config.vector_store_config,
         embedding_config=store_config.embedding_config,
         llm_config=request.llm_config,
-        chain_config=request.chain_config,
+        chain_config=request.chain_config,  ## Do not know how this one should made  its RetrievalQAChainComponent
+                                            ## it ask for (llm - retriever - chain_type - verbose) may set of other inputs but will belong to the chat table not chatbot
+                                            ## to be set at the Chat pipeline with other configs
+                                            ## at fisrt i will only use RetrievalQAChainComponent until i solve the problem and later add more 
+                                            ## For the chain_config of the Chat bot i will made it to get the chain_type value
+                                            ## chain_type  ->  stuff - map_reduce - refine - map_rerank
         memory_config=request.memory_config,
         prompt_config=request.prompt_config,
     )

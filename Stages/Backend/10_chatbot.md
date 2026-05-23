@@ -1,5 +1,3 @@
-## plan
-
 ### Admin
 
 #### Chatbot
@@ -28,10 +26,10 @@ and may use this file to handle also the user normal chat with some of the endpo
 
 (router tag: "Chat") — 7 endpoints:
 
-- POST /admin/chatbots/{chatbot_id}/sessions — Create session
-- GET /admin/chatbots/{chatbot_id}/sessions — List sessions
-- GET /admin/chatbots/{chatbot_id}/sessions/{session_id} — Get session
-- PUT /admin/chatbots/{chatbot_id}/sessions/{session_id} — Rename session
-- DELETE /admin/chatbots/{chatbot_id}/sessions/{session_id} — Delete session
-- GET /admin/chatbots/{chatbot_id}/sessions/{session_id}/messages — List messages
-- POST /admin/chatbots/{chatbot_id}/sessions/{session_id}/chat — Chat (send + AI reply)
+- `POST /admin/chatbots/{chatbot_id}/sessions` — Create session
+- `GET /admin/chatbots/{chatbot_id}/sessions` — List sessions
+- `GET /admin/chatbots/{chatbot_id}/sessions/{session_id}` — Get session
+- `PUT /admin/chatbots/{chatbot_id}/sessions/{session_id}` — Rename session
+- `DELETE /admin/chatbots/{chatbot_id}/sessions/{session_id}` — Delete session
+- `GET /admin/chatbots/{chatbot_id}/sessions/{session_id}/messages` — List messages
+- `POST /admin/chatbots/{chatbot_id}/sessions/{session_id}/chat` — Chat (send + AI reply)
