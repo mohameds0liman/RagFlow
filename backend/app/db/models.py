@@ -90,20 +90,15 @@ class MessageRole(str, enum.Enum):
 
 class UserAccess(Base):
     __tablename__ = "user_access"
-
-    id               = Column(UUID(as_uuid=False), primary_key=True, default=_uuid)
-    user_id          = Column(UUID(as_uuid=False), ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
-    document_store_id = Column(UUID(as_uuid=False), ForeignKey("document_store.id", ondelete="CASCADE"), nullable=False, index=True)
-    chatbot_id       =Column(UUID(as_uuid=False), ForeignKey("chatbot.id", ondelete="CASCADE"), nullable=False, index=True)
-    granted_at       = Column(DateTime, nullable=False, default=_now)
-
-    # unique constraint to prevent duplicate access records
+    id         = Column(UUID(as_uuid=False), primary_key=True, default=_uuid)
+    user_id    = Column(UUID(as_uuid=False), ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    chatbot_id = Column(UUID(as_uuid=False), ForeignKey("chatbot.id", ondelete="CASCADE"), nullable=False, index=True)
+    granted_at = Column(DateTime, nullable=False, default=_now)
     __table_args__ = (
-        UniqueConstraint('user_id', 'document_store_id', name='uq_user_access'),
+        UniqueConstraint('user_id', 'chatbot_id', name='user_chatbot_access'),
     )
-
     def __repr__(self):
-        return f"<UserAccess id={self.id} user_id={self.user_id} store_id={self.document_store_id}>"
+        return f"<UserAccess id={self.id} user_id={self.user_id} chatbot_id={self.chatbot_id}>"
 
 # ---------------------------------------------------------------------------
 
