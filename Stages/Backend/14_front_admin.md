@@ -23,3 +23,8 @@ also make the history last 7 messages by one number  it add paris of messages hu
 -3 -> human+ai + human+ai + human+ai + question  -> 7 messages
 ...
 
+
+## summary 
+
+fix some problems with the chat history and test all endpoints of the admin side ready to make the Frontend Demo of the 
+admin side

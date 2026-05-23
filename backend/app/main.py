@@ -6,7 +6,9 @@ from fastapi.staticfiles import StaticFiles
 from app.api.Admin.admin import router as admin_router
 from app.api.Admin.chatbot import router as chatbot_router
 from app.api.Admin.chat import router as chat_router
+from app.api.Admin.users import router as users_router
 from app.api.auth import router as auth_router
+
 # from pathlib import Path
 # BASE_DIR = Path(__file__).resolve().parent  # points to wherever main.py lives
 
@@ -32,6 +34,7 @@ app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(chatbot_router)
 app.include_router(chat_router)
+app.include_router(users_router)
 
 
 app.mount(

@@ -6,7 +6,7 @@ from app.db.session import get_db
 from app.db.models import User, UserAccess, UserRole, Chatbot
 from app.api.auth import require_admin
 
-router = APIRouter(prefix="/admin/users", tags=["Admin — Users"])
+router = APIRouter(prefix="/admin/users", tags=["Users"])
 
 
 
