@@ -532,7 +532,7 @@ def ingest_document(
 #   "chunker_name": "RecursiveCharacterTextSplitter",
 #   "loader_config": {},
 #   "chunker_config": {"chunk_size":500,"chunk_overlap":50},
-#   "uploaded_document_id": "f2262c94-dd93-4c93-acc7-908a9faeefac"
+#   "doc_id": "f2262c94-dd93-4c93-acc7-908a9faeefac"
 # }
 
 

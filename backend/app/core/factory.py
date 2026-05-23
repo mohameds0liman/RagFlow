@@ -114,13 +114,26 @@ class PipelineFactory:
             search_kwargs={"k": vs_cfg.get("build_config", {}).get("top_k", 4)}  ## later will let admin set the top_k while creating chatbot
         )
 
-            # llm=llm,
-            # retriever=retriever,
-            # chain_type=chain_type,
-            # verbose=verbose,
+
+
+        ######################################################
+        # Solution of the History including Problem
+        from langchain_core.prompts import PromptTemplate
+        ## the ConversationalRetrievalChain only have a template with input variable  question + context  Without the Chat History 
+        ## this one will override the prompt of the  ConversationalRetrievalChain to include the chat_history with the question + context 
+        qa_template = """Use the following pieces of context to answer the question at the end.
+        If you don't know the answer, just say that you don't know.
+        {context}
+        Chat History:
+        {chat_history}
+        Question: {question}
+        Helpful Answer:"""
+
+        qa_prompt = PromptTemplate(template=qa_template, input_variables=["context", "question", "chat_history"])
+        ######################################################
         # chain_type  stuff - map_reduce - refine - map_rerank
         chain_cfg=chatbot.chain_config
-        chain_conf={"llm":llm ,"retriever":retriever ,"chain_type": "stuff"}#chain_cfg["chain_type"] , chain_cfg["k"]
+        chain_conf={"llm":llm ,"retriever":retriever ,"chain_type": "stuff" , "combine_docs_chain_kwargs": {"prompt": qa_prompt},}#chain_cfg["chain_type"] , chain_cfg["k"]
         # 4. Chain (no memory — endpoint passes chat_history via invoke)
         chain =registry.build(
             category="chain",

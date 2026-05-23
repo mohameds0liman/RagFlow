@@ -10,6 +10,7 @@ class ConversationalRetrievalChainComponent(BaseComponent):
         InputParam(name="retriever",     type="vector_store",  required=True,  description="Vector store retriever"),
         InputParam(name="chain_type",    type="str",           default="stuff", description="Chain type: stuff, map_reduce, refine, map_rerank"),
         InputParam(name="k",             type="int",           default=4,       description="Number of documents to retrieve"),
+        InputParam(name="combine_docs_chain_kwargs", type="dict", default={},description="Extra kwargs for load_qa_chain (e.g. custom prompt)"),
         # InputParam(name="verbose",       type="bool",          default=False),
         # InputParam(name="return_source_documents", type="bool", default=True,  description="Include source documents in output"),
         # InputParam(name="return_generated_question", type="bool", default=False, description="Include the rewritten standalone question in output"),
@@ -24,6 +25,8 @@ class ConversationalRetrievalChainComponent(BaseComponent):
         return_source = config.get("return_source_documents", True)
         return_question = config.get("return_generated_question", False)
 
+        combine_docs_chain_kwargs = config.get("combine_docs_chain_kwargs", {})
+
         retriever.search_kwargs = {"k": k}
 
         return ConversationalRetrievalChain.from_llm(
@@ -33,4 +36,5 @@ class ConversationalRetrievalChainComponent(BaseComponent):
             verbose=verbose,
             return_source_documents=return_source,
             return_generated_question=return_question,
+            combine_docs_chain_kwargs=combine_docs_chain_kwargs,
         )

@@ -97,24 +97,17 @@ def create_chatbot(
 
 
 
+
+
 # {
-#   "name": "My Support Bot",
-#   "description": "Answers product questions",
-#   "store_id": "550e8400-e29b-41d4-a716-446655440000",
+#   "name": "PIF_2024",
+#   "description": "This the is the First end to end Chat bot use the knowledge base Admin_Side that contain PIF Annual 2024",
+#   "store_id": "05d803a0-2676-4cc8-a8e8-efd9c9ff70cc",
 #   "status": "active",
-#   "llm_config": {
-#     "name": "ChatOllama",
-#     "build_config": {
-#       "base_url": "http://localhost:11434",
-#       "model": "llama3.1:8b",
-#       "temperature": 0
-#     }
-#   },
-#   "chain_config": {
-#     "chain_type": "ConversationalRetrievalChain"
-#   },
-#   "memory_config": null,
-#   "prompt_config": null
+#   "llm_config": {"name": "ChatOllama","build_config": { "base_url": "http://localhost:11434","model": "gemma4:31b-cloud","temperature": 0}},
+#   "chain_config": {},  # can add "chain_type" : "stuff" -> map_reduce - refine - map_rerank  and also can add  "k": 5  for the retrieving but these two are negelcted in the factory code
+#   "memory_config": {},
+#   "prompt_config": {}
 # }
 
 
