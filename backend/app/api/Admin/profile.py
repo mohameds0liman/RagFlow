@@ -3,8 +3,8 @@ from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.db.models import User
-from app.api.auth import require_user, validate_password_strength, verify_password, hash_password
-router = APIRouter(prefix="/user", tags=["User Profile"])
+from app.api.auth import require_admin, validate_password_strength, verify_password, hash_password
+router = APIRouter(prefix="/admin", tags=["Admin Profile"])
 
 
 ##########################################################################
@@ -37,44 +37,45 @@ def _profile_to_dict(user: User) -> dict:
 ##########################################################################
 @router.get("/profile")
 def get_profile(
-    user: User = Depends(require_user),
+    admin_user: User = Depends(require_admin),
 ):
-    return {"status": "ok", "profile": _profile_to_dict(user)}
+    return {"status": "ok", "profile": _profile_to_dict(admin_user)}
 @router.put("/profile")
 def update_profile(
     payload: UpdateProfileRequest,
-    user: User = Depends(require_user),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     if payload.username is not None:
         existing = db.query(User).filter(
             User.username == payload.username,
-            User.id != user.id,
+            User.id != admin_user.id,
         ).first()
         if existing:
             raise HTTPException(status_code=409, detail="Username already taken")
-        user.username = payload.username
+        admin_user.username = payload.username
     if payload.email is not None:
         existing = db.query(User).filter(
             User.email == payload.email,
-            User.id != user.id,
+            User.id != admin_user.id,
         ).first()
         if existing:
             raise HTTPException(status_code=409, detail="Email already registered")
-        user.email = payload.email
+        admin_user.email = payload.email
     db.commit()
-    db.refresh(user)
-    return {"status": "updated", "profile": _profile_to_dict(user)}
+    db.refresh(admin_user)
+    return {"status": "updated", "profile": _profile_to_dict(admin_user)}
+
 @router.patch("/profile/password")
 def change_password(
     payload: ChangePasswordRequest,
-    user: User = Depends(require_user),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    if not verify_password(payload.current_password, user.password_hash):
+    if not verify_password(payload.current_password, admin_user.password_hash):
         raise HTTPException(status_code=401, detail="Current password is incorrect")
     validate_password_strength(payload.new_password)
-    user.password_hash = hash_password(payload.new_password)
-    user.refresh_token_hash = None
+    admin_user.password_hash = hash_password(payload.new_password)
+    admin_user.refresh_token_hash = None
     db.commit()
     return {"status": "password_updated"}

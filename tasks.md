@@ -12,18 +12,18 @@
 > Goal: Run `npm run dev` and see a themed shell. Validate colors, sidebar, and cards look Flowise-identical before writing any feature.
 
 | # | Status | Task | File(s) |
-|---|--------|------|---------|
-| 1.1 | `[ ]` | Initialize Vite + React, install all dependencies | `Frontend/` |
-| 1.2 | `[ ]` | Create `.env` with `VITE_API_URL=http://127.0.0.1:8000` and `VITE_STREAMING_ENABLED=false` | `Frontend/.env` |
-| 1.3 | `[ ]` | Build MUI dark theme — Flowise palette, Inter font, sidebar/topbar tokens | `src/theme/index.js` |
-| 1.4 | `[ ]` | Build `MainCard` wrapper component | `src/components/MainCard.jsx` |
-| 1.5 | `[ ]` | Build `ConfirmDialog` — destructive action dialog | `src/components/ConfirmDialog.jsx` |
-| 1.6 | `[ ]` | Build `StatusChip` — status color map | `src/components/StatusChip.jsx` |
-| 1.7 | `[ ]` | Build `StyledDataGrid` — MUI DataGrid with dark theme | `src/components/StyledDataGrid.jsx` |
-| 1.8 | `[ ]` | Build `axiosInstance.js` — base config, JWT interceptor, 401 auto-refresh | `src/api/axiosInstance.js` |
-| 1.9 | `[ ]` | Set up Redux store with empty slices | `src/store/index.js`, `src/store/slices/*.js` |
-| 1.10 | `[ ]` | Build `AdminLayout.jsx` — 260px sidebar, nav items, active indicator, 64px topbar | `src/layouts/AdminLayout.jsx` |
-| 1.11 | `[ ]` | Build `UserLayout.jsx` — minimal top nav, no sidebar | `src/layouts/UserLayout.jsx` |
+|--|--------|------|---------|
+| 1.1 | `[x]` | Initialize Vite + React, install all dependencies | `Frontend/` |
+| 1.2 | `[x]` | Create `.env` with `VITE_API_URL=http://127.0.0.1:8000` and `VITE_STREAMING_ENABLED=false` | `Frontend/.env` |
+| 1.3 | `[x]` | Build MUI dark theme — Flowise palette, Inter font, sidebar/topbar tokens | `src/theme/index.js` |
+| 1.4 | `[x]` | Build `MainCard` wrapper component | `src/components/MainCard.jsx` |
+| 1.5 | `[x]` | Build `ConfirmDialog` — destructive action dialog | `src/components/ConfirmDialog.jsx` |
+| 1.6 | `[x]` | Build `StatusChip` — status color map | `src/components/StatusChip.jsx` |
+| 1.7 | `[x]` | Build `StyledDataGrid` — MUI DataGrid with dark theme | `src/components/StyledDataGrid.jsx` |
+| 1.8 | `[x]` | Build `axiosInstance.js` — base config, JWT interceptor, 401 auto-refresh | `src/api/axiosInstance.js` |
+| 1.9 | `[x]` | Set up Redux store with empty slices | `src/store/index.js`, `src/store/slices/*.js` |
+| 1.10 | `[x]` | Build `AdminLayout.jsx` — 260px sidebar, nav items, active indicator, 64px topbar | `src/layouts/AdminLayout.jsx` |
+| 1.11 | `[x]` | Build `UserLayout.jsx` — minimal top nav, no sidebar | `src/layouts/UserLayout.jsx` |
 
 ### ✅ Milestone 1 Validation
 Open the browser and confirm:

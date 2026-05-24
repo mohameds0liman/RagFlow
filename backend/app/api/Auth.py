@@ -158,6 +158,10 @@ def require_admin(user: User = Depends(get_current_user)) -> User:
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
+def require_user(user: User = Depends(get_current_user)) -> User:
+    if user.role != UserRole.user:
+        raise HTTPException(status_code=403, detail="User access required")
+    return user
 
 def validate_password_strength(password: str) -> None:
     if len(password) < 8:
