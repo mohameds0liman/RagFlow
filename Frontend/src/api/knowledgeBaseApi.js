@@ -54,7 +54,7 @@ export const addChunk = (id, docId, payload) =>
   api.post(`/admin/knowledge_bases/${id}/chunks`, payload, { params: { doc_id: docId } });
 
 export const triggerUpsert = (id, docId) =>
-  api.post(`/admin/knowledge_bases/${id}/upsert`, { doc_id: docId });
+  api.post(`/admin/knowledge_bases/${id}/upsert`, JSON.stringify(docId));
 
 export const listComponentCategories = () =>
   api.get('/admin/components/categories');

@@ -6,7 +6,7 @@ class OllamaEmbeddingComponent(BaseComponent):
     category="embedder"
     inputs = [
         InputParam(name="base_url",   type="str", default="http://localhost:11434"),
-        InputParam(name="model_name", type="str", default="nomic-embed-text"),
+        InputParam(name="model", type="str", default="nomic-embed-text"),
     ]
 
     def build(self, config: dict):

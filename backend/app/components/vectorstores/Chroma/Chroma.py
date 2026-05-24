@@ -6,7 +6,7 @@ class ChromaVectorStoreComponent(BaseComponent):
     inputs = [
         InputParam(name="collection_name", type="str", required=True),
         InputParam(name="persist_directory", type="str", default="./chroma_db", required=True),
-        InputParam(name="embedding_function", type="str", default="OpenAIEmbedding", required=True)
+        # InputParam(name="embedding_function", type="str", default="OpenAIEmbedding", required=True)
 
     ]
 

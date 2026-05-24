@@ -12,6 +12,8 @@ import {
   MenuItem,
   CircularProgress,
   IconButton,
+  Card,
+  CardContent,
   useTheme,
 } from '@mui/material';
 import { IconX } from '@tabler/icons-react';
@@ -39,12 +41,14 @@ const IngestStatusDialog = ({ open, onClose, kbId, document: doc }) => {
       setLoading(true);
       try {
         const { data: loaderData } = await kbApi.listComponents('loader');
-        setLoaders(loaderData);
-        if (loaderData.length > 0) setLoaderName(loaderData[0].name);
+        const loaderList = Object.entries(loaderData || {}).map(([name, inputs]) => ({ name, inputs }));
+        setLoaders(loaderList);
+        if (loaderList.length > 0) setLoaderName(loaderList[0].name);
 
         const { data: chunkerData } = await kbApi.listComponents('chunker');
-        setChunkers(chunkerData);
-        if (chunkerData.length > 0) setChunkerName(chunkerData[0].name);
+        const chunkerList = Object.entries(chunkerData || {}).map(([name, inputs]) => ({ name, inputs }));
+        setChunkers(chunkerList);
+        if (chunkerList.length > 0) setChunkerName(chunkerList[0].name);
       } catch {
         enqueueSnackbar('Failed to load components', { variant: 'error' });
       } finally {
@@ -79,13 +83,13 @@ const IngestStatusDialog = ({ open, onClose, kbId, document: doc }) => {
 
   return (
     <Dialog open={open} onClose={() => onClose(false)} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6">Load & Chunk Document</Typography>
+      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
+        <Typography variant="h6">Load</Typography>
         <IconButton size="small" onClick={() => onClose(false)}>
           <IconX size={20} />
         </IconButton>
       </DialogTitle>
-      <DialogContent>
+      <DialogContent sx={{ pt: 2 }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress />
@@ -96,51 +100,68 @@ const IngestStatusDialog = ({ open, onClose, kbId, document: doc }) => {
               Document: <strong>{doc?.file_name}</strong>
             </Typography>
 
-            <TextField
-              select
-              label="Loader"
-              fullWidth
-              size="small"
-              value={loaderName}
-              onChange={(e) => setLoaderName(e.target.value)}
-              sx={{ mb: 2 }}
-            >
-              {loaders.map((l) => (
-                <MenuItem key={l.name} value={l.name}>{l.name}</MenuItem>
-              ))}
-            </TextField>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Card sx={{ backgroundColor: theme.palette.background.paper, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
+                <CardContent>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, color: theme.palette.text.primary }}>
+                    Loader
+                  </Typography>
+                  <TextField
+                    select
+                    label="Component"
+                    fullWidth
+                    size="small"
+                    value={loaderName}
+                    onChange={(e) => setLoaderName(e.target.value)}
+                    sx={{ mb: 1 }}
+                  >
+                    {loaders.map((l) => (
+                      <MenuItem key={l.name} value={l.name}>{l.name}</MenuItem>
+                    ))}
+                  </TextField>
+                </CardContent>
+              </Card>
 
-            <TextField
-              select
-              label="Chunker"
-              fullWidth
-              size="small"
-              value={chunkerName}
-              onChange={(e) => setChunkerName(e.target.value)}
-              sx={{ mb: 2 }}
-            >
-              {chunkers.map((c) => (
-                <MenuItem key={c.name} value={c.name}>{c.name}</MenuItem>
-              ))}
-            </TextField>
-
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
-                label="Chunk Size"
-                type="number"
-                size="small"
-                fullWidth
-                value={chunkSize}
-                onChange={(e) => setChunkSize(Number(e.target.value))}
-              />
-              <TextField
-                label="Chunk Overlap"
-                type="number"
-                size="small"
-                fullWidth
-                value={chunkOverlap}
-                onChange={(e) => setChunkOverlap(Number(e.target.value))}
-              />
+              <Card sx={{ backgroundColor: theme.palette.background.paper, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
+                <CardContent>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, color: theme.palette.text.primary }}>
+                    Chunker
+                  </Typography>
+                  <TextField
+                    select
+                    label="Component"
+                    fullWidth
+                    size="small"
+                    value={chunkerName}
+                    onChange={(e) => setChunkerName(e.target.value)}
+                    sx={{ mb: 1.5 }}
+                  >
+                    {chunkers.map((c) => (
+                      <MenuItem key={c.name} value={c.name}>{c.name}</MenuItem>
+                    ))}
+                  </TextField>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <TextField
+                      label="Chunk Size"
+                      type="number"
+                      size="small"
+                      fullWidth
+                      placeholder="1000"
+                      value={chunkSize}
+                      onChange={(e) => setChunkSize(Number(e.target.value))}
+                    />
+                    <TextField
+                      label="Chunk Overlap"
+                      type="number"
+                      size="small"
+                      fullWidth
+                      placeholder="200"
+                      value={chunkOverlap}
+                      onChange={(e) => setChunkOverlap(Number(e.target.value))}
+                    />
+                  </Box>
+                </CardContent>
+              </Card>
             </Box>
           </>
         )}

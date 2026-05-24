@@ -13,6 +13,15 @@ const StatusChip = ({ status, ...props }) => {
     Error: { bg: `${theme.palette.error.main}26`, color: theme.palette.error.main },
     Granted: { bg: `${theme.palette.success.main}26`, color: theme.palette.success.main },
     Revoked: { bg: `${theme.palette.error.main}26`, color: theme.palette.error.main },
+    uploaded: { bg: `${theme.palette.primary.main}26`, color: theme.palette.primary.main },
+    processing: { bg: `${theme.palette.warning.main}26`, color: theme.palette.warning.main },
+    ready: { bg: `${theme.palette.success.main}26`, color: theme.palette.success.main },
+    error: { bg: `${theme.palette.error.main}26`, color: theme.palette.error.main },
+    active: { bg: `${theme.palette.success.main}26`, color: theme.palette.success.main },
+    inactive: { bg: `${theme.palette.error.main}26`, color: theme.palette.error.main },
+    pending: { bg: theme.palette.action.hover, color: theme.palette.text.secondary },
+    completed: { bg: `${theme.palette.success.main}26`, color: theme.palette.success.main },
+    embedded: { bg: `${theme.palette.primary.main}26`, color: theme.palette.primary.main },
   };
 
   const style = statusColorMap[status] || { bg: theme.palette.action.hover, color: theme.palette.text.secondary };

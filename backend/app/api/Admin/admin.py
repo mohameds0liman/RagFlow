@@ -446,7 +446,7 @@ def list_uploaded_documents(knowledge_base_id: str, db: Session = Depends(get_db
     docs = db.query(UploadedDocument).filter(
         UploadedDocument.store_id == store.id
     ).order_by(UploadedDocument.created_date.desc()).all()
-    return {"documents": [to_dict(d) for d in docs]}
+    return {"documents": [to_dict(d, extras=loader_counts(d.id, db)) for d in docs]}
 
 
 @router.delete("/knowledge_bases/{knowledge_base_id}/documents/{doc_id}")
@@ -541,7 +541,7 @@ def ingest_document(
 ############################
 
 
-##List All Chunks
+##List All Chunks of the Knowledge base
 @router.get("/knowledge_bases/{knowledge_base_id}/chunks")
 def list_chunks(
     knowledge_base_id: str,
@@ -554,6 +554,7 @@ def list_chunks(
         DocumentChunk.store_id == store.id,
     ).order_by(DocumentChunk.chunk_no).all()
     return {"chunks": [to_dict(r) for r in rows], "count": len(rows)}
+
 
 ## on pressing The Chunk Get one Chunk with its id to edit
 @router.get("/knowledge_bases/{knowledge_base_id}/chunks/{chunk_id}")

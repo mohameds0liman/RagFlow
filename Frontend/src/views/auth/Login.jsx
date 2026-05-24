@@ -113,7 +113,7 @@ const Login = () => {
             R
           </Avatar>
           <Typography variant="h5" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
-            Welcome to RAGFlow
+            RAGFlow
           </Typography>
           <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mt: 0.5 }}>
             Sign in to your account

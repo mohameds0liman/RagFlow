@@ -11,6 +11,11 @@ import {
   IconButton,
   Tooltip,
   CircularProgress,
+  Card,
+  CardContent,
+  CardActions,
+  Chip,
+  Grid,
   useTheme,
 } from '@mui/material';
 import {
@@ -18,18 +23,22 @@ import {
   IconUpload,
   IconSettings,
   IconPlayerPlay,
+  IconCloudUpload,
+  IconCircleCheckFilled,
   IconEye,
   IconTrash,
   IconFileDescription,
+  IconFile,
+  IconNumbers,
 } from '@tabler/icons-react';
 import MainCard from '../../../components/MainCard';
-import StyledDataGrid from '../../../components/StyledDataGrid';
 import StatusChip from '../../../components/StatusChip';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import {
   fetchKnowledgeBases,
   fetchDocuments,
   deleteDocument,
+  triggerUpsert,
   setSelectedKB,
 } from '../../../store/slices/kbSlice';
 import UpsertionConfigDialog from './UpsertionConfigDialog';
@@ -43,7 +52,7 @@ const DocumentStoreDetail = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { enqueueSnackbar } = useSnackbar();
-  const { list, selectedKB, documents, documentLoading } = useSelector((state) => state.knowledgeBases);
+  const { list, selectedKB, documents, documentLoading, upsertLoading } = useSelector((state) => state.knowledgeBases);
 
   const [upsertConfigOpen, setUpsertConfigOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -81,82 +90,19 @@ const DocumentStoreDetail = () => {
     }
   }, [dispatch, id, deleteConfirm, enqueueSnackbar]);
 
-  const columns = [
-    { field: 'file_name', headerName: 'File Name', flex: 1, minWidth: 200 },
-    {
-      field: 'file_type',
-      headerName: 'Type',
-      width: 80,
-      renderCell: (params) => (
-        <Typography variant="caption" sx={{ color: theme.palette.text.secondary, textTransform: 'uppercase' }}>
-          {params.value}
-        </Typography>
-      ),
-    },
-    {
-      field: 'file_size_mb',
-      headerName: 'Size (MB)',
-      width: 100,
-      renderCell: (params) => (
-        <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-          {params.value?.toFixed(2)}
-        </Typography>
-      ),
-    },
-    {
-      field: 'status',
-      headerName: 'Status',
-      width: 110,
-      renderCell: (params) => <StatusChip status={params.value} />,
-    },
-    {
-      field: 'created_date',
-      headerName: 'Uploaded',
-      width: 170,
-      renderCell: (params) => (
-        <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-          {params.value ? new Date(params.value).toLocaleString() : '-'}
-        </Typography>
-      ),
-    },
-    {
-      field: 'actions',
-      headerName: 'Actions',
-      width: 180,
-      sortable: false,
-      renderCell: (params) => (
-        <Box sx={{ display: 'flex', gap: 0.5 }}>
-          <Tooltip title="Load & Chunk">
-            <IconButton
-              size="small"
-              onClick={() => { setSelectedDoc(params.row); setIngestOpen(true); }}
-              disabled={params.row.status === 'ready'}
-            >
-              <IconPlayerPlay size={16} />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="View Chunks">
-            <IconButton
-              size="small"
-              onClick={() => { setSelectedDoc(params.row); setChunksOpen(true); }}
-              disabled={params.row.status !== 'ready'}
-            >
-              <IconEye size={16} />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Delete">
-            <IconButton
-              size="small"
-              onClick={() => setDeleteConfirm(params.row)}
-              sx={{ color: theme.palette.error.main }}
-            >
-              <IconTrash size={16} />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      ),
-    },
-  ];
+  const [recentUpsert, setRecentUpsert] = useState(null);
+
+  const handleUpsert = useCallback(async (doc) => {
+    try {
+      await dispatch(triggerUpsert({ id, docId: doc.id })).unwrap();
+      setRecentUpsert(doc.id);
+      setTimeout(() => setRecentUpsert(null), 2000);
+    } catch (err) {
+      const msg = typeof err === 'string' ? err : JSON.stringify(err?.response?.data || err);
+      console.error('[Upsert]', doc.id, err);
+      enqueueSnackbar(msg, { variant: 'error' });
+    }
+  }, [dispatch, id, enqueueSnackbar]);
 
   return (
     <>
@@ -187,8 +133,6 @@ const DocumentStoreDetail = () => {
             >
               Back
             </Button>
-            <StatusChip status={selectedKB?.status} />
-            {selectedKB?.upsertion_config_ready && <StatusChip status="Configured" />}
           </Box>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
@@ -203,35 +147,8 @@ const DocumentStoreDetail = () => {
               startIcon={<IconSettings size={18} />}
               onClick={() => setUpsertConfigOpen(true)}
             >
-              Upsertion Config
+              Upsert Config
             </Button>
-          </Box>
-        </Box>
-
-        {selectedKB?.description && (
-          <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
-            {selectedKB.description}
-          </Typography>
-        )}
-
-        <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h4" sx={{ color: theme.palette.primary.main, fontWeight: 700 }}>
-              {selectedKB?.documents_count ?? 0}
-            </Typography>
-            <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>Documents</Typography>
-          </Box>
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h4" sx={{ color: theme.palette.primary.main, fontWeight: 700 }}>
-              {selectedKB?.chunks_count ?? 0}
-            </Typography>
-            <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>Chunks</Typography>
-          </Box>
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h4" sx={{ color: theme.palette.primary.main, fontWeight: 700 }}>
-              {selectedKB?.chatbots_count ?? 0}
-            </Typography>
-            <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>Chatbots</Typography>
           </Box>
         </Box>
 
@@ -259,15 +176,97 @@ const DocumentStoreDetail = () => {
             </Button>
           </Box>
         ) : (
-          <StyledDataGrid
-            rows={documents}
-            columns={columns}
-            getRowId={(row) => row.id}
-            pageSize={10}
-            rowsPerPageOptions={[10]}
-            disableRowSelectionOnClick
-            autoHeight
-          />
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 3 }}>
+            {documents.map((doc) => (
+              <Card
+                  sx={{
+                    backgroundColor: theme.palette.background.paper,
+                    border: `1px solid ${theme.palette.divider}`,
+                    borderRadius: '12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    aspectRatio: '5 / 2',
+                    transition: 'border-color 0.2s',
+                    '&:hover': {
+                      borderColor: theme.palette.primary.main,
+                    },
+                  }}
+                >
+                  <CardContent sx={{ pb: 1, flex: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                      <IconFile size={24} style={{ color: theme.palette.primary.main, marginTop: 2, flexShrink: 0 }} />
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="body1" noWrap sx={{ fontWeight: 600, color: theme.palette.text.primary, fontSize: '1rem' }}>
+                          {doc.file_name}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                      <CardActions sx={{ pt: 0, px: 2, pb: 1.5, display: 'flex', justifyContent: 'space-between' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <StatusChip status={doc.status} />
+                          <Chip label={`.${doc.file_type}`} size="small" variant="outlined" sx={{ color: theme.palette.primary.main, borderColor: theme.palette.primary.main, borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600, height: 28 }} />
+                          <Chip label={`${doc.file_size_mb?.toFixed(2)} MB`} size="small" variant="outlined" sx={{ color: theme.palette.text.secondary, borderColor: theme.palette.divider, borderRadius: '8px', fontSize: '0.8rem', fontWeight: 500, height: 28 }} />
+                          <Chip label={`${doc.chunks_count ?? 0} chunks`} size="small" variant="outlined" sx={{ color: theme.palette.warning.main, borderColor: theme.palette.warning.main, borderRadius: '8px', fontSize: '0.8rem', fontWeight: 500, height: 28 }} />
+                        </Box>
+                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                      <Tooltip title="Load">
+                        <IconButton
+                          size="small"
+                          onClick={() => { setSelectedDoc(doc); setIngestOpen(true); }}
+                          disabled={doc.status === 'ready'}
+                          sx={{ width: 32, height: 32 }}
+                        >
+                          <IconPlayerPlay size={18} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Upsert">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleUpsert(doc)}
+                          disabled={doc.status !== 'ready' || upsertLoading}
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            color: recentUpsert === doc.id ? theme.palette.success.main : theme.palette.primary.main,
+                          }}
+                        >
+                          {upsertLoading ? (
+                            <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, ml: -1, mt: -1 }}>
+                              <IconCloudUpload size={18} />
+                              <CircularProgress size={32} thickness={2.5} sx={{ position: 'absolute', top: 0, left: 0, color: theme.palette.primary.main }} />
+                            </Box>
+                          ) : recentUpsert === doc.id ? (
+                            <IconCircleCheckFilled size={18} />
+                          ) : (
+                            <IconCloudUpload size={18} />
+                          )}
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="View & Edit Chunks">
+                        <IconButton
+                          size="small"
+                          onClick={() => { setSelectedDoc(doc); setChunksOpen(true); }}
+                          disabled={doc.status !== 'ready'}
+                          sx={{ width: 32, height: 32 }}
+                        >
+                          <IconEye size={18} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete">
+                        <IconButton
+                          size="small"
+                          onClick={() => setDeleteConfirm(doc)}
+                          sx={{ color: theme.palette.error.main, width: 32, height: 32 }}
+                        >
+                          <IconTrash size={18} />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </CardActions>
+                </Card>
+            ))}
+          </Box>
         )}
       </MainCard>
 

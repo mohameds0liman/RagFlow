@@ -19,7 +19,6 @@ import {
   IconX,
   IconEdit,
   IconTrash,
-  IconPlayerPlay,
 } from '@tabler/icons-react';
 import { useDispatch, useSelector } from 'react-redux';
 import StyledDataGrid from '../../../components/StyledDataGrid';
@@ -28,19 +27,17 @@ import {
   fetchChunks,
   updateChunk,
   deleteChunk,
-  triggerUpsert,
 } from '../../../store/slices/kbSlice';
 
 const ChunksViewDialog = ({ open, onClose, kbId, document: doc }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
   const { enqueueSnackbar } = useSnackbar();
-  const { chunks, chunkLoading, upsertLoading } = useSelector((state) => state.knowledgeBases);
+  const { chunks, chunkLoading } = useSelector((state) => state.knowledgeBases);
 
   const [editChunk, setEditChunk] = useState(null);
   const [editContent, setEditContent] = useState('');
   const [deleteChunkId, setDeleteChunkId] = useState(null);
-  const [upserting, setUpserting] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -175,15 +172,6 @@ const ChunksViewDialog = ({ open, onClose, kbId, document: doc }) => {
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<IconPlayerPlay size={16} />}
-              onClick={handleUpsert}
-              disabled={upsertLoading || upserting || chunks.length === 0}
-            >
-              {upserting ? <CircularProgress size={16} /> : 'Upsert'}
-            </Button>
             <IconButton size="small" onClick={() => onClose(false)}>
               <IconX size={20} />
             </IconButton>

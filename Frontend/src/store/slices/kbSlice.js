@@ -137,9 +137,11 @@ export const triggerUpsert = createAsyncThunk(
   'kb/triggerUpsert',
   async ({ id, docId }, { rejectWithValue }) => {
     try {
+      console.log('[Upsert] sending', { id, docId });
       const { data } = await kbApi.triggerUpsert(id, docId);
       return data;
     } catch (err) {
+      console.error('[Upsert] error', err.response?.status, err.response?.data);
       return rejectWithValue(err.response?.data?.detail || 'Failed to trigger upsert');
     }
   }

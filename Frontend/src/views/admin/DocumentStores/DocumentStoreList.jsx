@@ -169,10 +169,9 @@ const DocumentStoreList = () => {
           </Button>
         </Box>
       ) : (
-        <Grid container spacing={3}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 3 }}>
           {list.map((kb) => (
-            <Grid item xs={12} sm={6} md={4} key={kb.id}>
-              <Card
+            <Card
                 sx={{
                   backgroundColor: theme.palette.background.paper,
                   border: `1px solid ${theme.palette.divider}`,
@@ -183,31 +182,22 @@ const DocumentStoreList = () => {
                     borderColor: theme.palette.primary.main,
                   },
                   position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  aspectRatio: '5 / 2',
                 }}
                 onClick={() => navigate(`/admin/document-stores/${kb.id}`)}
               >
-                <CardContent sx={{ pb: 1 }}>
+                <CardContent sx={{ pb: 1, flex: 1 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography variant="h6" noWrap sx={{ fontWeight: 600, color: theme.palette.text.primary, mb: 0.5 }}>
+                      <Typography variant="h6" noWrap sx={{ fontWeight: 700, color: theme.palette.text.primary, fontSize: '1.3rem', mb: 1 }}>
                         {kb.name}
                       </Typography>
-                      {kb.description && (
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: theme.palette.text.secondary,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            mb: 1.5,
-                          }}
-                        >
-                          {kb.description}
-                        </Typography>
-                      )}
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        <StatusChip status={kb.status} />
+                        {kb.upsertion_config_ready && <StatusChip status="Configured" />}
+                      </Box>
                     </Box>
                     <IconButton
                       size="small"
@@ -215,42 +205,37 @@ const DocumentStoreList = () => {
                         e.stopPropagation();
                         handleMenuOpen(e, kb);
                       }}
-                      sx={{ ml: 1, color: theme.palette.text.secondary }}
+                      sx={{ ml: 1, color: theme.palette.text.secondary, flexShrink: 0 }}
                     >
-                      <IconDots size={18} />
+                      <IconDots size={24} />
                     </IconButton>
-                  </Box>
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    <StatusChip status={kb.status} />
-                    {kb.upsertion_config_ready && <StatusChip status="Configured" />}
                   </Box>
                 </CardContent>
                 <CardActions sx={{ pt: 0, px: 2, pb: 1.5 }}>
-                  <Box sx={{ display: 'flex', gap: 2 }}>
+                  <Box sx={{ display: 'flex', gap: 2.5 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <IconFileDescription size={14} style={{ color: theme.palette.text.disabled }} />
-                      <Typography variant="caption" sx={{ color: theme.palette.text.disabled }}>
+                      <IconFileDescription size={20} style={{ color: theme.palette.text.disabled }} />
+                      <Typography variant="body2" sx={{ color: theme.palette.text.disabled, fontSize: '0.9rem' }}>
                         {kb.documents_count ?? 0} docs
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <IconNumbers size={14} style={{ color: theme.palette.text.disabled }} />
-                      <Typography variant="caption" sx={{ color: theme.palette.text.disabled }}>
-                        {kb.chunks_count ?? 0} chunks
+                      <IconNumbers size={20} style={{ color: theme.palette.text.disabled }} />
+                      <Typography variant="body2" sx={{ color: theme.palette.text.disabled, fontSize: '0.9rem' }}>
+                        {kb.chunks_count ?? 0}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <IconRobot size={14} style={{ color: theme.palette.text.disabled }} />
-                      <Typography variant="caption" sx={{ color: theme.palette.text.disabled }}>
-                        {kb.chatbots_count ?? 0} bots
+                      <IconRobot size={20} style={{ color: theme.palette.text.disabled }} />
+                      <Typography variant="body2" sx={{ color: theme.palette.text.disabled, fontSize: '0.9rem' }}>
+                        {kb.chatbots_count ?? 0}
                       </Typography>
                     </Box>
                   </Box>
                 </CardActions>
               </Card>
-            </Grid>
           ))}
-        </Grid>
+        </Box>
       )}
 
       <Menu

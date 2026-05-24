@@ -72,24 +72,24 @@ Open the browser and confirm:
 
 | # | Status | Task | File(s) | Depends On |
 |---|--------|------|---------|------------|
-| 3.1 | `[ ]` | Implement `knowledgeBaseApi.js` — all KB, config, upload, documents, chunks endpoints | `src/api/knowledgeBaseApi.js` | 1.8 |
-| 3.2 | `[ ]` | Implement `kbSlice.js` — KB list, selected KB, documents, chunks, async thunks | `src/store/slices/kbSlice.js` | 1.9 |
-| 3.3 | `[ ]` | Build `DocumentStoreList.jsx` — card grid 3/row, add/edit/delete dialogs, status chip | `src/views/admin/DocumentStores/DocumentStoreList.jsx` | 3.1, 3.2 |
-| 3.4 | `[ ]` | Build `UpsertionConfigDialog.jsx` — dynamic form from `/components` endpoints, POST/PUT config, "Configured" chip | `src/views/admin/DocumentStores/UpsertionConfigDialog.jsx` | 3.1 |
-| 3.5 | `[ ]` | Build `UploadDocumentDialog.jsx` — drag-and-drop zone, format chips, upload progress bar | `src/views/admin/DocumentStores/UploadDocumentDialog.jsx` | 3.1 |
-| 3.6 | `[ ]` | Build `DocumentStoreDetail.jsx` — breadcrumb, documents table, row actions menu (Load / View Chunks / Delete) | `src/views/admin/DocumentStores/DocumentStoreDetail.jsx` | 3.1, 3.2 |
-| 3.7 | `[ ]` | Build `IngestStatusDialog.jsx` — Load Document action, inline row spinner, status update on success | `src/views/admin/DocumentStores/IngestStatusDialog.jsx` | 3.1 |
-| 3.8 | `[ ]` | Build `ChunksViewDialog.jsx` — full-width dialog, chunks table, edit/delete per chunk, pagination 20/page | `src/views/admin/DocumentStores/ChunksViewDialog.jsx` | 3.1 |
+| 3.1 | `[x]` | Implement `knowledgeBaseApi.js` — all KB, config, upload, documents, chunks endpoints | `src/api/knowledgeBaseApi.js` | 1.8 |
+| 3.2 | `[x]` | Implement `kbSlice.js` — KB list, selected KB, documents, chunks, async thunks | `src/store/slices/kbSlice.js` | 1.9 |
+| 3.3 | `[x]` | Build `DocumentStoreList.jsx` — card grid 3/row, add/edit/delete dialogs, status chip | `src/views/admin/DocumentStores/DocumentStoreList.jsx` | 3.1, 3.2 |
+| 3.4 | `[x]` | Build `UpsertionConfigDialog.jsx` — dynamic form from `/components` endpoints, POST/PUT config, "Configured" chip | `src/views/admin/DocumentStores/UpsertionConfigDialog.jsx` | 3.1 |
+| 3.5 | `[x]` | Build `UploadDocumentDialog.jsx` — drag-and-drop zone, format chips, upload progress bar | `src/views/admin/DocumentStores/UploadDocumentDialog.jsx` | 3.1 |
+| 3.6 | `[x]` | Build `DocumentStoreDetail.jsx` — breadcrumb, documents table, row actions menu (Load / View Chunks / Delete) | `src/views/admin/DocumentStores/DocumentStoreDetail.jsx` | 3.1, 3.2 |
+| 3.7 | `[x]` | Build `IngestStatusDialog.jsx` — Load Document action, inline row spinner, status update on success | `src/views/admin/DocumentStores/IngestStatusDialog.jsx` | 3.1 |
+| 3.8 | `[x]` | Build `ChunksViewDialog.jsx` — full-width dialog, chunks table, edit/delete per chunk, pagination 20/page | `src/views/admin/DocumentStores/ChunksViewDialog.jsx` | 3.1 |
 
 ### ✅ Milestone 3 Validation (against real backend)
-- [ ] Create a KB → card appears in grid with correct name and "Pending" chip
-- [ ] Open KB → detail page with breadcrumb
-- [ ] Set Upsertion Config → "Configured" green chip appears, reloading page keeps it
-- [ ] Upload a PDF → file appears in documents table with size and date
-- [ ] "Load Document" → spinner shows, status changes to "Loaded" on success
-- [ ] "View & Edit Chunks" → chunks appear, edit one chunk → saved, delete one chunk → removed
-- [ ] "Trigger Upsert" → success snackbar
-- [ ] Delete KB → confirm dialog appears, KB removed from grid
+- [x] Create a KB → card appears in grid with correct name and "Pending" chip
+- [x] Open KB → detail page with breadcrumb
+- [x] Set Upsertion Config → "Configured" green chip appears, reloading page keeps it
+- [x] Upload a PDF → file appears in documents table with size and date
+- [x] "Load Document" → spinner shows, status changes to "Loaded" on success
+- [x] "View & Edit Chunks" → chunks appear, edit one chunk → saved, delete one chunk → removed
+- [x] "Trigger Upsert" → success snackbar
+- [x] Delete KB → confirm dialog appears, KB removed from grid
 
 ---
 
