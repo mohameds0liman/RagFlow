@@ -1,28 +1,33 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { Formik, Form, Field } from 'formik';
+import * as Yup from 'yup';
 import {
   Box,
   TextField,
   Button,
   Typography,
   Avatar,
-  Link,
+  useTheme,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import api from '../../api/axiosInstance';
+import { forgotPasswordApi } from '../../api/authApi';
+
+const validationSchema = Yup.object({
+  email: Yup.string().email('Invalid email address').required('Email is required'),
+});
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
   const { enqueueSnackbar } = useSnackbar();
-  const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [sentEmail, setSentEmail] = useState('');
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      await api.post('/auth/forgot-password', { email });
+      await forgotPasswordApi(values.email);
+      setSentEmail(values.email);
       setSent(true);
       enqueueSnackbar('Reset link sent to your email', { variant: 'success' });
     } catch (err) {
@@ -30,8 +35,17 @@ const ForgotPassword = () => {
         variant: 'error',
       });
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
+  };
+
+  const cardSx = {
+    width: '100%',
+    maxWidth: 400,
+    p: 4,
+    backgroundColor: theme.palette.background.paper,
+    border: `1px solid ${theme.palette.divider}`,
+    borderRadius: '12px',
   };
 
   if (sent) {
@@ -42,31 +56,17 @@ const ForgotPassword = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: '#1A1F2E',
+          backgroundColor: theme.palette.background.default,
         }}
       >
-        <Box
-          sx={{
-            width: '100%',
-            maxWidth: 400,
-            p: 4,
-            backgroundColor: '#1E2330',
-            border: '1px solid #2D3448',
-            borderRadius: '12px',
-            textAlign: 'center',
-          }}
-        >
-          <Typography variant="h5" sx={{ fontWeight: 600, color: '#E0E0E0', mb: 1 }}>
+        <Box sx={{ ...cardSx, textAlign: 'center' }}>
+          <Typography variant="h5" sx={{ fontWeight: 600, color: theme.palette.text.primary, mb: 1 }}>
             Check Your Email
           </Typography>
-          <Typography variant="body2" sx={{ color: '#9099B0', mb: 3 }}>
-            We've sent a password reset link to {email}
+          <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
+            We've sent a password reset link to {sentEmail}
           </Typography>
-          <Button
-            fullWidth
-            variant="contained"
-            onClick={() => navigate('/login')}
-          >
+          <Button fullWidth variant="contained" onClick={() => navigate('/login')}>
             Back to Sign In
           </Button>
         </Box>
@@ -81,25 +81,14 @@ const ForgotPassword = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#1A1F2E',
+        backgroundColor: theme.palette.background.default,
       }}
     >
-      <Box
-        component="form"
-        onSubmit={handleSubmit}
-        sx={{
-          width: '100%',
-          maxWidth: 400,
-          p: 4,
-          backgroundColor: '#1E2330',
-          border: '1px solid #2D3448',
-          borderRadius: '12px',
-        }}
-      >
+      <Box sx={cardSx}>
         <Box sx={{ textAlign: 'center', mb: 3 }}>
           <Avatar
             sx={{
-              bgcolor: '#4B72FF',
+              bgcolor: theme.palette.primary.main,
               width: 48,
               height: 48,
               borderRadius: 2,
@@ -111,43 +100,53 @@ const ForgotPassword = () => {
           >
             R
           </Avatar>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#E0E0E0' }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
             Reset Password
           </Typography>
-          <Typography variant="body2" sx={{ color: '#9099B0', mt: 0.5 }}>
+          <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mt: 0.5 }}>
             Enter your email to receive a reset link
           </Typography>
         </Box>
 
-        <TextField
-          fullWidth
-          label="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          sx={{ mb: 3 }}
-        />
-
-        <Button
-          type="submit"
-          fullWidth
-          variant="contained"
-          disabled={loading}
-          sx={{ py: 1.5, mb: 2 }}
+        <Formik
+          initialValues={{ email: '' }}
+          validationSchema={validationSchema}
+          onSubmit={handleSubmit}
         >
-          {loading ? 'Sending...' : 'Send Reset Link'}
-        </Button>
+          {({ errors, touched, isSubmitting }) => (
+            <Form>
+              <Field
+                as={TextField}
+                fullWidth
+                name="email"
+                label="Email"
+                type="email"
+                error={touched.email && Boolean(errors.email)}
+                helperText={touched.email && errors.email}
+                sx={{ mb: 3 }}
+              />
 
-        <Box sx={{ textAlign: 'center' }}>
-          <Link
-            underline="hover"
-            sx={{ color: '#4B72FF', fontSize: '0.8125rem', cursor: 'pointer' }}
-            onClick={() => navigate('/login')}
-          >
-            Back to Sign In
-          </Link>
-        </Box>
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                disabled={isSubmitting}
+                sx={{ py: 1.5, mb: 2 }}
+              >
+                {isSubmitting ? 'Sending...' : 'Send Reset Link'}
+              </Button>
+
+              <Box sx={{ textAlign: 'center' }}>
+                <Link
+                  to="/login"
+                  style={{ color: theme.palette.primary.main, fontSize: '0.8125rem', textDecoration: 'none' }}
+                >
+                  Back to Sign In
+                </Link>
+              </Box>
+            </Form>
+          )}
+        </Formik>
       </Box>
     </Box>
   );

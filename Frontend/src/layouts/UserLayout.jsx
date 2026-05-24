@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Box,
   AppBar,
@@ -12,13 +12,17 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
+  useTheme,
 } from '@mui/material';
-import { IconLogout, IconMessage } from '@tabler/icons-react';
+import { IconLogout, IconSun, IconMoon } from '@tabler/icons-react';
 import { logout } from '../store/slices/authSlice';
+import { toggleTheme } from '../store/slices/themeSlice';
 
 const UserLayout = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const theme = useTheme();
+  const themeMode = useSelector((state) => state.theme.mode);
   const [anchorEl, setAnchorEl] = useState(null);
 
   const handleLogout = async () => {
@@ -32,15 +36,15 @@ const UserLayout = () => {
       <AppBar
         position="fixed"
         sx={{
-          backgroundColor: '#171C2B',
-          borderBottom: '1px solid #2D3448',
+          backgroundColor: theme.palette.background.paper,
+          borderBottom: `1px solid ${theme.palette.divider}`,
           boxShadow: 'none',
         }}
       >
         <Toolbar sx={{ minHeight: '64px !important' }}>
           <Avatar
             sx={{
-              bgcolor: '#4B72FF',
+              bgcolor: theme.palette.primary.main,
               width: 32,
               height: 32,
               borderRadius: 1.5,
@@ -53,16 +57,19 @@ const UserLayout = () => {
           </Avatar>
           <Typography
             variant="h6"
-            sx={{ fontWeight: 700, color: '#E0E0E0', flexGrow: 1 }}
+            sx={{ fontWeight: 700, color: theme.palette.text.primary, flexGrow: 1 }}
           >
             RAGFlow
           </Typography>
+          <IconButton onClick={() => dispatch(toggleTheme())} sx={{ mr: 1 }}>
+            {themeMode === 'dark' ? <IconSun size={20} /> : <IconMoon size={20} />}
+          </IconButton>
           <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
             <Avatar
               sx={{
                 width: 32,
                 height: 32,
-                bgcolor: '#4B72FF',
+                bgcolor: theme.palette.primary.main,
                 fontSize: '0.875rem',
                 fontWeight: 600,
               }}
@@ -92,7 +99,7 @@ const UserLayout = () => {
         sx={{
           flexGrow: 1,
           mt: '64px',
-          backgroundColor: '#1A1F2E',
+          backgroundColor: theme.palette.background.default,
           minHeight: 'calc(100vh - 64px)',
         }}
       >

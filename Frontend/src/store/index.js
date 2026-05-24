@@ -3,6 +3,7 @@ import authReducer from './slices/authSlice';
 import kbReducer from './slices/kbSlice';
 import chatbotReducer from './slices/chatbotSlice';
 import usersReducer from './slices/usersSlice';
+import themeReducer from './slices/themeSlice';
 
 const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ const store = configureStore({
     knowledgeBases: kbReducer,
     chatbots: chatbotReducer,
     users: usersReducer,
+    theme: themeReducer,
   },
 });
 

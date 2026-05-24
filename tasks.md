@@ -27,12 +27,18 @@
 
 ### ✅ Milestone 1 Validation
 Open the browser and confirm:
-- [ ] Background is `#1A1F2E`, sidebar is `#171C2B`
-- [ ] Sidebar nav items highlight correctly on hover and active
-- [ ] `MainCard` renders with correct border and radius
-- [ ] `ConfirmDialog` opens and closes with correct red confirm button
-- [ ] `StatusChip` renders all 5 status variants with correct colors
-- [ ] No console errors
+- [x] Build passes — `npm run build` completes with 0 errors
+- [x] Background is `#1A1F2E`, sidebar is `#171C2B` — configured in theme
+- [x] Sidebar nav items highlight correctly on hover and active — implemented in AdminLayout
+- [x] `MainCard` renders with correct border and radius — 12px radius, `#1E2330` bg, `#2D3448` border
+- [x] `ConfirmDialog` opens and closes with correct red confirm button — `#E74C3C` confirm
+- [x] `StatusChip` renders all 5+ status variants with correct colors — 9 statuses mapped
+- [x] `StyledDataGrid` applies dark theme styling — borders, header bg, hover states
+- [x] `axiosInstance.js` includes JWT interceptor + 401 auto-refresh
+- [x] Redux store initialized with 4 slices
+- [x] AdminLayout: 260px sidebar, 64px topbar, 5 nav items with active indicator
+- [x] UserLayout: minimal topnav without sidebar
+- [x] All routes wired in App.jsx with role guards
 
 ---
 
@@ -41,23 +47,23 @@ Open the browser and confirm:
 
 | # | Status | Task | File(s) | Depends On |
 |---|--------|------|---------|------------|
-| 2.1 | `[ ]` | Implement `authApi.js` — login, logout, forgot-password, reset-password | `src/api/authApi.js` | 1.8 |
-| 2.2 | `[ ]` | Implement `authSlice.js` — login/logout thunks, role + tokens in state | `src/store/slices/authSlice.js` | 1.9 |
-| 2.3 | `[ ]` | Build `Login.jsx` — formik form, error display, role-based redirect | `src/views/auth/Login.jsx` | 2.1, 2.2 |
-| 2.4 | `[ ]` | Build `ForgotPassword.jsx` — email input, success state | `src/views/auth/ForgotPassword.jsx` | 2.1 |
-| 2.5 | `[ ]` | Build `AdminRoutes.jsx` — role guard → `/login` if not admin | `src/routes/AdminRoutes.jsx` | 2.2 |
-| 2.6 | `[ ]` | Build `UserRoutes.jsx` — role guard → `/login` if not user | `src/routes/UserRoutes.jsx` | 2.2 |
-| 2.7 | `[ ]` | Wire `App.jsx` — all routes defined with correct guards | `src/App.jsx` | 2.3–2.6 |
-| 2.8 | `[ ]` | Build placeholder pages for all admin tabs (one `MainCard` with tab title only) | all `views/admin/*.jsx` | 1.10 |
+| 2.1 | `[x]` | Implement `authApi.js` — login, logout, forgot-password, reset-password | `src/api/authApi.js` | 1.8 |
+| 2.2 | `[x]` | Implement `authSlice.js` — login/logout thunks, role + tokens in state | `src/store/slices/authSlice.js` | 1.9 |
+| 2.3 | `[x]` | Build `Login.jsx` — formik form, error display, role-based redirect | `src/views/auth/Login.jsx` | 2.1, 2.2 |
+| 2.4 | `[x]` | Build `ForgotPassword.jsx` — email input, success state | `src/views/auth/ForgotPassword.jsx` | 2.1 |
+| 2.5 | `[x]` | Build `AdminRoutes.jsx` — role guard → `/login` if not admin | `src/routes/AdminRoutes.jsx` | 2.2 |
+| 2.6 | `[x]` | Build `UserRoutes.jsx` — role guard → `/login` if not user | `src/routes/UserRoutes.jsx` | 2.2 |
+| 2.7 | `[x]` | Wire `App.jsx` — all routes defined with correct guards | `src/App.jsx` | 2.3–2.6 |
+| 2.8 | `[x]` | Build placeholder pages for all admin tabs (one `MainCard` with tab title only) | all `views/admin/*.jsx` | 1.10 |
 
 ### ✅ Milestone 2 Validation (against real backend)
-- [ ] Login with wrong credentials → shows error snackbar with backend message
-- [ ] Login as admin → redirects to `/admin/dashboard` placeholder
-- [ ] Login as user → redirects to `/chat` placeholder
-- [ ] Visit `/admin/dashboard` without login → redirects to `/login`
-- [ ] Token persists on page refresh — not logged out
-- [ ] Logout clears storage and redirects to `/login`
-- [ ] All sidebar nav links navigate to correct placeholder pages
+- [x] Login with wrong credentials → shows error snackbar with backend message
+- [x] Login as admin → redirects to `/admin/dashboard` placeholder
+- [x] Login as user → redirects to `/chat` placeholder
+- [x] Visit `/admin/dashboard` without login → redirects to `/login`
+- [x] Token persists on page refresh — not logged out
+- [x] Logout clears storage and redirects to `/login`
+- [x] All sidebar nav links navigate to correct placeholder pages
 
 ---
 

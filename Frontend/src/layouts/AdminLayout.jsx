@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Box,
   Drawer,
@@ -16,6 +16,7 @@ import {
   Menu,
   MenuItem,
   Divider,
+  useTheme,
 } from '@mui/material';
 import {
   IconLayoutDashboard,
@@ -25,8 +26,11 @@ import {
   IconUsers,
   IconLogout,
   IconMenu2,
+  IconSun,
+  IconMoon,
 } from '@tabler/icons-react';
 import { logout } from '../store/slices/authSlice';
+import { toggleTheme } from '../store/slices/themeSlice';
 
 const SIDEBAR_WIDTH = 260;
 
@@ -42,6 +46,8 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+  const theme = useTheme();
+  const themeMode = useSelector((state) => state.theme.mode);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -56,7 +62,7 @@ const AdminLayout = () => {
       <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
         <Avatar
           sx={{
-            bgcolor: '#4B72FF',
+            bgcolor: theme.palette.primary.main,
             width: 36,
             height: 36,
             borderRadius: 1.5,
@@ -66,14 +72,14 @@ const AdminLayout = () => {
         >
           R
         </Avatar>
-        <Typography variant="h6" sx={{ fontWeight: 700, color: '#E0E0E0', fontSize: '1.1rem' }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.text.primary, fontSize: '1.1rem' }}>
           RAGFlow
         </Typography>
       </Box>
-      <Divider sx={{ borderColor: '#2D3448' }} />
+      <Divider sx={{ borderColor: theme.palette.divider }} />
       <List sx={{ flex: 1, px: 1.5, py: 1 }}>
         {navItems.map((item) => {
-          const isActive = location.pathname.startsWith(item.path);
+          const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
           const Icon = item.icon;
           return (
             <ListItemButton
@@ -86,19 +92,19 @@ const AdminLayout = () => {
                 borderRadius: 1.5,
                 mb: 0.5,
                 pl: 2,
-                borderLeft: isActive ? '4px solid #4B72FF' : '4px solid transparent',
-                backgroundColor: isActive ? 'rgba(75,114,255,0.12)' : 'transparent',
+                borderLeft: isActive ? `4px solid ${theme.palette.primary.main}` : '4px solid transparent',
+                backgroundColor: isActive ? `${theme.palette.primary.main}1f` : 'transparent',
                 '&:hover': {
                   backgroundColor: isActive
-                    ? 'rgba(75,114,255,0.15)'
-                    : 'rgba(75,114,255,0.06)',
+                    ? `${theme.palette.primary.main}26`
+                    : `${theme.palette.primary.main}0f`,
                 },
               }}
             >
               <ListItemIcon
                 sx={{
                   minWidth: 36,
-                  color: isActive ? '#4B72FF' : '#9099B0',
+                  color: isActive ? theme.palette.primary.main : theme.palette.text.secondary,
                 }}
               >
                 <Icon size={20} />
@@ -108,7 +114,7 @@ const AdminLayout = () => {
                 primaryTypographyProps={{
                   fontSize: '0.875rem',
                   fontWeight: isActive ? 600 : 400,
-                  color: isActive ? '#E0E0E0' : '#9099B0',
+                  color: isActive ? theme.palette.text.primary : theme.palette.text.secondary,
                 }}
               />
             </ListItemButton>
@@ -125,8 +131,8 @@ const AdminLayout = () => {
         sx={{
           width: { md: `calc(100% - ${SIDEBAR_WIDTH}px)` },
           ml: { md: `${SIDEBAR_WIDTH}px` },
-          backgroundColor: '#1A1F2E',
-          borderBottom: '1px solid #2D3448',
+          backgroundColor: theme.palette.background.paper,
+          borderBottom: `1px solid ${theme.palette.divider}`,
           boxShadow: 'none',
         }}
       >
@@ -139,15 +145,18 @@ const AdminLayout = () => {
           >
             <IconMenu2 size={22} />
           </IconButton>
-          <Typography variant="body1" sx={{ flexGrow: 1, color: '#9099B0' }}>
+          <Typography variant="body1" sx={{ flexGrow: 1, color: theme.palette.text.secondary }}>
             {navItems.find((item) => location.pathname.startsWith(item.path))?.label || 'RAGFlow'}
           </Typography>
+          <IconButton onClick={() => dispatch(toggleTheme())} sx={{ mr: 1 }}>
+            {themeMode === 'dark' ? <IconSun size={20} /> : <IconMoon size={20} />}
+          </IconButton>
           <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
             <Avatar
               sx={{
                 width: 32,
                 height: 32,
-                bgcolor: '#4B72FF',
+                bgcolor: theme.palette.primary.main,
                 fontSize: '0.875rem',
                 fontWeight: 600,
               }}
@@ -207,7 +216,7 @@ const AdminLayout = () => {
           p: 3,
           mt: '64px',
           width: { md: `calc(100% - ${SIDEBAR_WIDTH}px)` },
-          backgroundColor: '#1A1F2E',
+          backgroundColor: theme.palette.background.default,
           minHeight: 'calc(100vh - 64px)',
         }}
       >
