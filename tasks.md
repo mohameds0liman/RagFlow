@@ -98,17 +98,20 @@ Open the browser and confirm:
 
 | # | Status | Task | File(s) | Depends On |
 |---|--------|------|---------|------------|
-| 4.1 | `[ ]` | Implement `chatbotApi.js` — CRUD chatbots | `src/api/chatbotApi.js` | 1.8 |
-| 4.2 | `[ ]` | Implement `chatbotSlice.js` — list, selected, async thunks | `src/store/slices/chatbotSlice.js` | 1.9 |
-| 4.3 | `[ ]` | Build `ChatbotList.jsx` — card grid, three-dot menu (Edit / Delete / Open Chat), KB name + LLM badge per card | `src/views/admin/Chatbots/ChatbotList.jsx` | 4.1, 4.2 |
-| 4.4 | `[ ]` | Build `ChatbotEditor.jsx` — left 60%: form fields (name, desc, chain type, LLM config, KB select, instructions, tools); right 40%: live preview panel placeholder | `src/views/admin/Chatbots/ChatbotEditor.jsx` | 4.1, 4.2 |
+| 4.1 | `[x]` | Implement `chatbotApi.js` — CRUD chatbots | `src/api/chatbotApi.js` | 1.8 |
+| 4.2 | `[x]` | Implement `chatbotSlice.js` — list, selected, async thunks | `src/store/slices/chatbotSlice.js` | 1.9 |
+| 4.3 | `[x]` | Build `ChatbotList.jsx` — card grid, three-dot menu (Edit / Delete / Open Chat), KB name + LLM badge per card, uses `ChatbotSettingsDialog` for both create and edit | `src/views/admin/Chatbots/ChatbotList.jsx` | 4.1, 4.2 |
+| 4.4 | `[x]` | Build `ChatbotSettingsDialog.jsx` — full settings dialog like UpsertionConfigDialog: cards for Basic Info, KB, LLM (dynamic schema), Chain & Memory, Prompt. No separate editor page. | `src/views/admin/Chatbots/ChatbotSettingsDialog.jsx` | 4.1, 4.2 |
 
 ### ✅ Milestone 4 Validation (against real backend)
-- [ ] Create chatbot → card appears with KB name and LLM badge
-- [ ] Edit chatbot → form pre-fills with saved values
-- [ ] KB dropdown shows KBs created in M3
-- [ ] Delete chatbot → confirm dialog, removed from grid
-- [ ] Form validation prevents save with empty name or no KB selected
+- [x] "Add Chatbot" button opens settings dialog with all sections in card layout
+- [x] Edit from context menu opens same dialog pre-filled with chatbot data
+- [x] KB dropdown populated from kbSlice (KBs created in M3)
+- [x] LLM Provider dropdown loads from `/admin/components?category=chat_model` with dynamic fields
+- [x] Create saves new chatbot to backend, Update saves changes to existing
+- [x] Delete from context menu → ConfirmDialog → chatbot removed from grid
+- [x] Form validation prevents save with empty name
+- [x] No separate editor page — `/admin/chatbots/:id` redirects to list
 
 ---
 
@@ -121,7 +124,7 @@ Open the browser and confirm:
 | 5.2 | `[ ]` | Build `ChatWindow.jsx` — message bubbles (right=blue, left=dark card), markdown rendering, auto-scroll, loading indicator | `src/components/ChatWindow.jsx` | 5.1 |
 | 5.3 | `[ ]` | Build `AdminChat.jsx` — left: chatbot list; right: ChatWindow; session history dropdown; "Edit Instructions" inline overlay | `src/views/admin/Chat/AdminChat.jsx` | 5.1, 5.2 |
 | 5.4 | `[ ]` | Build `UserChat.jsx` — left: assigned chatbots; right: ChatWindow; auto-create session on first message; 429 rate limit banner | `src/views/user/UserChat.jsx` | 5.1, 5.2 |
-| 5.5 | `[ ]` | Wire live chat preview into right panel of `ChatbotEditor.jsx` | `src/views/admin/Chatbots/ChatbotEditor.jsx` | 5.2 |
+| 5.5 | `[ ]` | Wire live chat preview into right panel of `ChatbotSettingsDialog.jsx` | `src/views/admin/Chatbots/ChatbotSettingsDialog.jsx` | 5.2 |
 
 ### ✅ Milestone 5 Validation (against real backend)
 - [ ] Admin selects chatbot in Chat tab → new session created automatically

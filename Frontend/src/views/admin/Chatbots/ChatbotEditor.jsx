@@ -1,8 +1,5 @@
-import MainCard from '../../../components/MainCard';
+import { Navigate } from 'react-router-dom';
 
-const ChatbotEditor = () => (
-  <MainCard title="Chatbot Editor">
-  </MainCard>
-);
+const ChatbotEditor = () => <Navigate to="/admin/chatbots" replace />;
 
 export default ChatbotEditor;

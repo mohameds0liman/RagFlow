@@ -17,7 +17,6 @@ import Dashboard from './views/admin/Dashboard';
 import DocumentStoreList from './views/admin/DocumentStores/DocumentStoreList';
 import DocumentStoreDetail from './views/admin/DocumentStores/DocumentStoreDetail';
 import ChatbotList from './views/admin/Chatbots/ChatbotList';
-import ChatbotEditor from './views/admin/Chatbots/ChatbotEditor';
 import AdminChat from './views/admin/Chat/AdminChat';
 import UserList from './views/admin/Users/UserList';
 import UserChat from './views/user/UserChat';
@@ -47,7 +46,7 @@ function App() {
           <Route path="document-stores" element={<DocumentStoreList />} />
           <Route path="document-stores/:id" element={<DocumentStoreDetail />} />
           <Route path="chatbots" element={<ChatbotList />} />
-          <Route path="chatbots/:id" element={<ChatbotEditor />} />
+          <Route path="chatbots/:id" element={<Navigate to="/admin/chatbots" replace />} />
           <Route path="chat" element={<AdminChat />} />
           <Route path="users" element={<UserList />} />
         </Route>
