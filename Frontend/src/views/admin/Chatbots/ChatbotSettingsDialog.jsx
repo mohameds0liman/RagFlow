@@ -28,6 +28,16 @@ const MEMORY_TYPES = [
   { value: 'summary', label: 'Summary Memory' },
 ];
 
+const NUMERIC_TYPES = ['float', 'integer', 'number'];
+
+const castValue = (value, type) => {
+  if (NUMERIC_TYPES.includes(type)) {
+    const n = type === 'integer' ? parseInt(value, 10) : parseFloat(value);
+    return isNaN(n) ? value : n;
+  }
+  return value;
+};
+
 const ChatbotSettingsDialog = ({ open, onClose, existingBot }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
@@ -131,12 +141,21 @@ const ChatbotSettingsDialog = ({ open, onClose, existingBot }) => {
       return;
     }
 
+    const typedConfig = {};
+    if (llmSchema?.inputs) {
+      llmSchema.inputs.forEach((field) => {
+        if (field.name in form.llm_config) {
+          typedConfig[field.name] = castValue(form.llm_config[field.name], field.type);
+        }
+      });
+    }
+
     const payload = {
       name: form.name.trim(),
       description: form.description.trim() || null,
       store_id: form.store_id || null,
       llm_config: form.llm_provider
-        ? { name: form.llm_provider, build_config: form.llm_config }
+        ? { name: form.llm_provider, build_config: typedConfig }
         : null,
       chain_config: { chain_type: form.chain_type },
       prompt_config: form.prompt_template.trim()
@@ -167,7 +186,7 @@ const ChatbotSettingsDialog = ({ open, onClose, existingBot }) => {
         label={field.description || field.name}
         fullWidth
         size="small"
-        type={field.type === 'integer' || field.type === 'number' ? 'number' : 'text'}
+        type={NUMERIC_TYPES.includes(field.type) ? 'number' : 'text'}
         value={form.llm_config[field.name] ?? ''}
         onChange={(e) => handleLlmFieldChange(field.name, e.target.value)}
         placeholder={field.default ? String(field.default) : ''}

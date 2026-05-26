@@ -9,7 +9,7 @@ class ChatModelOllama(BaseComponent):
     inputs=[
         InputParam(name="base_url" , type="str" ,default="http://localhost:11434" ,required=True ,description="Model Base URL"),
         InputParam(name="model" , type="str" ,default="llama3.1:8b" , required=True , description="Model Name"),
-        InputParam(name="temperature " , type="float" ,default=0),
+        InputParam(name="temperature" , type="float" ,default=0),
     ]
 
     def build(self, config :dict):

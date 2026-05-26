@@ -120,17 +120,18 @@ Open the browser and confirm:
 
 | # | Status | Task | File(s) | Depends On |
 |---|--------|------|---------|------------|
-| 5.1 | `[ ]` | Implement `chatApi.js` — sessions CRUD, message history, send message with streaming flag | `src/api/chatApi.js` | 1.8 |
-| 5.2 | `[ ]` | Build `ChatWindow.jsx` — message bubbles (right=blue, left=dark card), markdown rendering, auto-scroll, loading indicator | `src/components/ChatWindow.jsx` | 5.1 |
-| 5.3 | `[ ]` | Build `AdminChat.jsx` — left: chatbot list; right: ChatWindow; session history dropdown; "Edit Instructions" inline overlay | `src/views/admin/Chat/AdminChat.jsx` | 5.1, 5.2 |
-| 5.4 | `[ ]` | Build `UserChat.jsx` — left: assigned chatbots; right: ChatWindow; auto-create session on first message; 429 rate limit banner | `src/views/user/UserChat.jsx` | 5.1, 5.2 |
-| 5.5 | `[ ]` | Wire live chat preview into right panel of `ChatbotSettingsDialog.jsx` | `src/views/admin/Chatbots/ChatbotSettingsDialog.jsx` | 5.2 |
+| 5.1 | `[x]` | Implement `chatApi.js` — sessions CRUD, message history, send message with streaming flag | `src/api/chatApi.js` | 1.8 |
+| 5.2 | `[x]` | Build `ChatWindow.jsx` — message bubbles (right=blue, left=dark card), markdown rendering, auto-scroll, loading indicator | `src/components/ChatWindow.jsx` | 5.1 |
+| 5.3 | `[x]` | Build `AdminChat.jsx` — left: session list (ChatGPT-style) with chatbot dropdown at top + New Conversation button; center: ChatWindow; right: settings panel (name, KB, LLM, chain, memory, prompt) with Update button | `src/views/admin/Chat/AdminChat.jsx` | 5.1, 5.2 |
+| 5.4 | `[x]` | Build `UserChat.jsx` — left: session list (ChatGPT-style) with chatbot dropdown at top + New Conversation button; center: ChatWindow; 429 rate limit banner | `src/views/user/UserChat.jsx` | 5.1, 5.2 |
+| 5.5 | `[x]` | Add numeric type coercion (`castValue`) to fix temperature float issue in `ChatbotSettingsDialog.jsx` + AdminChat settings panel | `src/views/admin/Chatbots/ChatbotSettingsDialog.jsx` | 5.2 |
 
 ### ✅ Milestone 5 Validation (against real backend)
 - [ ] Admin selects chatbot in Chat tab → new session created automatically
 - [ ] Send a message → reply appears in bubble with markdown rendered
 - [ ] Chat history loads when switching back to a previous session
-- [ ] "Edit Instructions" updates chatbot and next reply reflects change
+- [ ] Settings panel toggles via gear icon, shows all config cards (name, KB, LLM, chain, memory, prompt)
+- [ ] "Update Settings" saves changes to backend, next chat reply reflects changes
 - [ ] Login as user → only sees assigned chatbots
 - [ ] User sends message → reply appears correctly
 - [ ] User hits rate limit → banner shows, input disabled
@@ -191,6 +192,15 @@ M1 Scaffold & Design System
 ```
 
 M3, M4, M6 are parallel after M2. M5 depends on M4. M7 is last.
+
+---
+
+## Backend Bug Found (M5)
+
+**File**: `backend/app/components/Chatmodels/ChatOllama/ChatOllama.py`
+- `InputParam(name="temperature " , ...)` has a **trailing space** in the `name` field.
+- The component's `build()` method accesses `config["temperature"]` (no space), causing a KeyError.
+- **Fix needed in backend**: Remove the trailing space from the `name` value to match `build()` usage.
 
 ---
 
