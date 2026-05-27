@@ -105,8 +105,8 @@ const ChatbotSettingsDialog = ({ open, onClose, existingBot }) => {
           });
           setLlmSchema(null);
         }
-      } catch {
-        enqueueSnackbar('Failed to load LLM components', { variant: 'error' });
+      } catch (err) {
+        enqueueSnackbar(err.response?.data?.detail || 'Failed to load LLM components', { variant: 'error' });
       } finally {
         setLoading(false);
       }
@@ -118,8 +118,9 @@ const ChatbotSettingsDialog = ({ open, onClose, existingBot }) => {
     try {
       const { data } = await kbApi.getComponentSchema(name, 'chat_model');
       setLlmSchema(data);
-    } catch {
+    } catch (err) {
       setLlmSchema(null);
+      enqueueSnackbar(err.response?.data?.detail || 'Failed to load LLM schema', { variant: 'error' });
     }
   }, []);
 

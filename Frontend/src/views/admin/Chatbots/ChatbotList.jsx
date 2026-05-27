@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { useSnackbar } from 'notistack';
 import {
   Box,
   Button,
@@ -42,6 +43,7 @@ const ChatbotList = () => {
   const theme = useTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
   const { list, loading, saving } = useSelector((state) => state.chatbots);
 
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -60,7 +62,9 @@ const ChatbotList = () => {
     try {
       await dispatch(deleteChatbot(selectedBot.id)).unwrap();
       setDeleteOpen(false);
-    } catch { /* error handled by slice */ }
+    } catch (err) {
+      enqueueSnackbar(err || 'Failed to delete chatbot', { variant: 'error' });
+    }
   };
 
   const handleMenuOpen = (e, bot) => {

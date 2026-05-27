@@ -64,3 +64,6 @@ export const listComponents = (category) =>
 
 export const getComponentSchema = (name, category) =>
   api.get(`/admin/components/${name}/schema`, { params: { category } });
+
+export const getDashboardStats = () =>
+  api.get('/admin/dashboard/stats');

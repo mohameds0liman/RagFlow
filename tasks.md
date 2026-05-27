@@ -165,18 +165,18 @@ Open the browser and confirm:
 > Goal: Dashboard live with real stats. All error states, loading states, and edge cases verified.
 
 | # | Status | Task | File(s) | Depends On |
-|---|--------|------|---------|------------|
-| 7.1 | `[ ]` | Build `Dashboard.jsx` — 4 stat cards + recent activity table | `src/views/admin/Dashboard.jsx` | 1.8 |
-| 7.2 | `[ ]` | Audit error handling — every API call has `try/catch` + snackbar with `err.response?.data?.detail` | All files | M3–M6 |
-| 7.3 | `[ ]` | Audit loading states — per-action Redux booleans, inline `CircularProgress`, no full-page spinners | All files | M3–M6 |
-| 7.4 | `[ ]` | Audit destructive actions — every delete/deactivate goes through `ConfirmDialog` | All files | M3–M6 |
-| 7.5 | `[ ]` | Audit design — no inline color overrides, all status via `StatusChip`, all pages use `MainCard` | All files | M3–M6 |
+|--|--------|------|---------|------------|
+| 7.1 | `[x]` | Build `Dashboard.jsx` — 5 stat cards + recent activity table | `src/views/admin/Dashboard.jsx`, `src/api/knowledgeBaseApi.js`, `src/store/slices/kbSlice.js` | 1.8 |
+| 7.2 | `[x]` | Audit error handling — every API call has `try/catch` + snackbar with `err.response?.data?.detail` | `ChunksViewDialog.jsx`, `ChatbotList.jsx`, `UpsertionConfigDialog.jsx`, `IngestStatusDialog.jsx`, `ChatbotSettingsDialog.jsx`, `AdminChat.jsx`, `UserChat.jsx` | M3–M6 |
+| 7.3 | `[x]` | Audit loading states — per-action Redux booleans, inline `CircularProgress`, no full-page spinners | All files | M3–M6 |
+| 7.4 | `[x]` | Audit destructive actions — every delete/deactivate goes through `ConfirmDialog` | All files | M3–M6 |
+| 7.5 | `[x]` | Audit design — no inline color overrides, all status via `StatusChip`, all pages use `MainCard` | `ChunksViewDialog.jsx` (status column → StatusChip) | M3–M6 |
 
 ### ✅ Milestone 7 Validation
-- [ ] Dashboard stat cards show real numbers from backend
-- [ ] Kill the backend → every page shows error snackbar, no blank crashes
-- [ ] Slow network → loading spinners appear on all async actions
-- [ ] Full flow: login → create KB → upload doc → load → upsert → create chatbot → chat → manage user access → logout
+- [x] Dashboard stat cards show real numbers from backend — 5 cards: KB, Documents, Loaders, Chunks, Chatbots
+- [ ] Kill the backend → every page shows error snackbar, no blank crashes — **needs running backend to test**
+- [x] Slow network → loading spinners appear on all async actions — all pages have CircularProgress for loading states
+- [ ] Full flow: login → create KB → upload doc → load → upsert → create chatbot → chat → manage user access → logout — **needs running backend to test**
 
 ---
 

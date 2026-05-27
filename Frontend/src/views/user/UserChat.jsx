@@ -46,7 +46,7 @@ const UserChat = () => {
         const { data } = await chatApi.userListChatbots();
         setChatbots(data.chatbots || []);
       } catch (err) {
-        enqueueSnackbar('Failed to load chatbots', { variant: 'error' });
+        enqueueSnackbar(err.response?.data?.detail || 'Failed to load chatbots', { variant: 'error' });
       }
     };
     load();
@@ -76,7 +76,7 @@ const UserChat = () => {
       const { data: msgData } = await chatApi.userListMessages(session.id);
       setMessages(msgData.messages || []);
     } catch (err) {
-      enqueueSnackbar('Failed to load conversations', { variant: 'error' });
+      enqueueSnackbar(err.response?.data?.detail || 'Failed to load conversations', { variant: 'error' });
     } finally {
       setLoading(false);
     }
@@ -87,8 +87,8 @@ const UserChat = () => {
     try {
       const { data } = await chatApi.userListMessages(session.id);
       setMessages(data.messages || []);
-    } catch {
-      enqueueSnackbar('Failed to load messages', { variant: 'error' });
+    } catch (err) {
+      enqueueSnackbar(err.response?.data?.detail || 'Failed to load messages', { variant: 'error' });
     }
   }, [enqueueSnackbar]);
 
@@ -151,7 +151,7 @@ const UserChat = () => {
       }
       enqueueSnackbar('Session deleted', { variant: 'success' });
     } catch (err) {
-      enqueueSnackbar('Failed to delete session', { variant: 'error' });
+      enqueueSnackbar(err.response?.data?.detail || 'Failed to delete session', { variant: 'error' });
     } finally {
       setDeleteConfirm(null);
     }
@@ -164,7 +164,7 @@ const UserChat = () => {
       setSessions((prev) => [data.session, ...prev]);
       await switchSession(data.session);
     } catch (err) {
-      enqueueSnackbar('Failed to create session', { variant: 'error' });
+      enqueueSnackbar(err.response?.data?.detail || 'Failed to create session', { variant: 'error' });
     }
   };
 

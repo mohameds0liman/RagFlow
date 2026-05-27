@@ -49,8 +49,8 @@ const IngestStatusDialog = ({ open, onClose, kbId, document: doc }) => {
         const chunkerList = Object.entries(chunkerData || {}).map(([name, inputs]) => ({ name, inputs }));
         setChunkers(chunkerList);
         if (chunkerList.length > 0) setChunkerName(chunkerList[0].name);
-      } catch {
-        enqueueSnackbar('Failed to load components', { variant: 'error' });
+      } catch (err) {
+        enqueueSnackbar(err.response?.data?.detail || 'Failed to load components', { variant: 'error' });
       } finally {
         setLoading(false);
       }

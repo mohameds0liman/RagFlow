@@ -22,6 +22,7 @@ import {
 } from '@tabler/icons-react';
 import { useDispatch, useSelector } from 'react-redux';
 import StyledDataGrid from '../../../components/StyledDataGrid';
+import StatusChip from '../../../components/StatusChip';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import {
   fetchChunks,
@@ -77,18 +78,6 @@ const ChunksViewDialog = ({ open, onClose, kbId, document: doc }) => {
     }
   };
 
-  const handleUpsert = async () => {
-    setUpserting(true);
-    try {
-      await dispatch(triggerUpsert({ id: kbId, docId: doc.id })).unwrap();
-      enqueueSnackbar('Upsert triggered successfully', { variant: 'success' });
-    } catch (err) {
-      enqueueSnackbar(err, { variant: 'error' });
-    } finally {
-      setUpserting(false);
-    }
-  };
-
   const columns = [
     { field: 'chunk_no', headerName: '#', width: 60 },
     {
@@ -118,15 +107,7 @@ const ChunksViewDialog = ({ open, onClose, kbId, document: doc }) => {
       headerName: 'Status',
       width: 100,
       renderCell: (params) => (
-        <Typography
-          variant="caption"
-          sx={{
-            color: params.value === 'embedded' ? theme.palette.success.main : theme.palette.text.secondary,
-            fontWeight: 500,
-          }}
-        >
-          {params.value}
-        </Typography>
+        <StatusChip status={params.value} />
       ),
     },
     {

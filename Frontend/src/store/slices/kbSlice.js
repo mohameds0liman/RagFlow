@@ -159,6 +159,18 @@ export const fetchStatus = createAsyncThunk(
   }
 );
 
+export const fetchDashboardStats = createAsyncThunk(
+  'kb/fetchDashboardStats',
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data } = await kbApi.getDashboardStats();
+      return data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.detail || 'Failed to fetch dashboard stats');
+    }
+  }
+);
+
 const kbSlice = createSlice({
   name: 'knowledgeBases',
   initialState: {
@@ -172,6 +184,8 @@ const kbSlice = createSlice({
     chunkLoading: false,
     ingestLoading: false,
     upsertLoading: false,
+    dashboardStats: null,
+    dashboardLoading: false,
   },
   reducers: {
     setSelectedKB: (state, action) => {
@@ -267,6 +281,18 @@ const kbSlice = createSlice({
       })
       .addCase(triggerUpsert.rejected, (state) => {
         state.upsertLoading = false;
+      })
+      .addCase(fetchDashboardStats.pending, (state) => {
+        state.dashboardLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchDashboardStats.fulfilled, (state, action) => {
+        state.dashboardLoading = false;
+        state.dashboardStats = action.payload;
+      })
+      .addCase(fetchDashboardStats.rejected, (state, action) => {
+        state.dashboardLoading = false;
+        state.error = action.payload;
       })
       .addCase(fetchStatus.fulfilled, (state, action) => {
         const kb = state.list.find((k) => k.id === action.payload.knowledge_base_id);

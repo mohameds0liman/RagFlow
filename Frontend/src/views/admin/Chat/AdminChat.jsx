@@ -110,7 +110,7 @@ const AdminChat = () => {
       const { data: msgData } = await chatApi.adminListMessages(chatbot.id, session.id);
       setMessages(msgData.messages || []);
     } catch (err) {
-      enqueueSnackbar('Failed to load conversations', { variant: 'error' });
+      enqueueSnackbar(err.response?.data?.detail || 'Failed to load conversations', { variant: 'error' });
     } finally {
       setLoading(false);
     }
@@ -122,8 +122,8 @@ const AdminChat = () => {
     try {
       const { data } = await chatApi.adminListMessages(selectedChatbot.id, session.id);
       setMessages(data.messages || []);
-    } catch {
-      enqueueSnackbar('Failed to load messages', { variant: 'error' });
+    } catch (err) {
+      enqueueSnackbar(err.response?.data?.detail || 'Failed to load messages', { variant: 'error' });
     }
   }, [selectedChatbot, enqueueSnackbar]);
 
@@ -161,15 +161,18 @@ const AdminChat = () => {
       });
 
       if (llmCfg.name) {
-        try {
-          const { data: schema } = await kbApi.getComponentSchema(llmCfg.name, 'chat_model');
-          setLlmSchema(schema);
-        } catch { setLlmSchema(null); }
+          try {
+            const { data: schema } = await kbApi.getComponentSchema(llmCfg.name, 'chat_model');
+            setLlmSchema(schema);
+          } catch (err) {
+            setLlmSchema(null);
+            enqueueSnackbar(err.response?.data?.detail || 'Failed to load LLM schema', { variant: 'error' });
+          }
       } else {
         setLlmSchema(null);
       }
-    } catch {
-      enqueueSnackbar('Failed to load settings', { variant: 'error' });
+    } catch (err) {
+      enqueueSnackbar(err.response?.data?.detail || 'Failed to load settings', { variant: 'error' });
     } finally {
       setSettingsLoading(false);
     }
@@ -187,7 +190,10 @@ const AdminChat = () => {
     try {
       const { data } = await kbApi.getComponentSchema(value, 'chat_model');
       setLlmSchema(data);
-    } catch { setLlmSchema(null); }
+    } catch (err) {
+      setLlmSchema(null);
+      enqueueSnackbar(err.response?.data?.detail || 'Failed to load LLM schema', { variant: 'error' });
+    }
   };
 
   const handleLlmFieldChange = (field, value) => {
@@ -288,7 +294,7 @@ const AdminChat = () => {
       }
       enqueueSnackbar('Session deleted', { variant: 'success' });
     } catch (err) {
-      enqueueSnackbar('Failed to delete session', { variant: 'error' });
+      enqueueSnackbar(err.response?.data?.detail || 'Failed to delete session', { variant: 'error' });
     } finally {
       setDeleteConfirm(null);
     }
@@ -301,7 +307,7 @@ const AdminChat = () => {
       setSessions((prev) => [data.session, ...prev]);
       await switchSession(data.session);
     } catch (err) {
-      enqueueSnackbar('Failed to create session', { variant: 'error' });
+      enqueueSnackbar(err.response?.data?.detail || 'Failed to create session', { variant: 'error' });
     }
   };
 

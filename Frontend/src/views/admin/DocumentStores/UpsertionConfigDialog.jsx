@@ -96,8 +96,9 @@ const UpsertionConfigDialog = ({ open, onClose, kbId, existingConfig }) => {
     try {
       const { data } = await kbApi.getComponentSchema(name, entry.category);
       setSchemas((prev) => ({ ...prev, [section]: data }));
-    } catch {
+    } catch (err) {
       setSchemas((prev) => ({ ...prev, [section]: null }));
+      enqueueSnackbar(err.response?.data?.detail || 'Failed to load component schema', { variant: 'error' });
     }
   }, []);
 
