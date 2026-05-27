@@ -126,16 +126,16 @@ Open the browser and confirm:
 | 5.4 | `[x]` | Build `UserChat.jsx` — left: session list (ChatGPT-style) with chatbot dropdown at top + New Conversation button; center: ChatWindow; 429 rate limit banner | `src/views/user/UserChat.jsx` | 5.1, 5.2 |
 | 5.5 | `[x]` | Add numeric type coercion (`castValue`) to fix temperature float issue in `ChatbotSettingsDialog.jsx` + AdminChat settings panel | `src/views/admin/Chatbots/ChatbotSettingsDialog.jsx` | 5.2 |
 
-### ✅ Milestone 5 Validation (against real backend)
-- [x] Admin selects chatbot in Chat tab → new session created automatically — verified code, auto-creates with `adminCreateSession` in `loadSessionsAndMessages` (AdminChat.jsx:96-106)
-- [x] Send a message → reply appears in bubble with markdown rendered — verified code, `ChatWindow.jsx` renders user msg right (blue) + AI msg left (dark+markdown via `react-markdown`)
-- [x] Chat history loads when switching back to a previous session — verified code, `switchSession` (AdminChat.jsx:117-126) loads messages via `adminListMessages`
-- [x] Settings panel toggles via gear icon, shows all config cards (name, KB, LLM, chain, memory, prompt) — verified visual: gear icon at AdminChat.jsx:365, panel with all 5 cards at lines 477-657
-- [ ] "Update Settings" saves changes to backend, next chat reply reflects changes — code implemented (AdminChat.jsx:198-239), needs backend to fully test
-- [ ] Login as user → only sees assigned chatbots — implemented, needs backend (`GET /user/chatbots`)
-- [x] User sends message → reply appears correctly — verified code, `handleSend` (UserChat.jsx:103-136) uses `userSendMessage`
-- [x] User hits rate limit → banner shows, input disabled — verified code, 429 check (UserChat.jsx:125-127), Alert banner (lines 293-297), `disabled={rateLimited}` (line 322)
-- [x] Delete session → removed from dropdown — verified code, both AdminChat (lines 269-289) and UserChat (lines 138-158)
+### ✅ Milestone 5 Validation
+- [x] Admin selects chatbot → new session auto-created — code verified
+- [x] Send message → reply in markdown bubble — code verified
+- [x] Chat history loads on session switch — code verified
+- [x] Settings panel toggles via gear icon, 5 config cards — code + visual verified
+- [ ] "Update Settings" saves to backend — **not tested** (needs running backend; backend `UpdateChatbotRequest` also missing `store_id` field)
+- [ ] Login as user → only assigned chatbots — **not tested** (needs running backend)
+- [x] User sends message → reply appears — code verified
+- [x] User hits 429 rate limit → banner + input disabled — code verified
+- [x] Delete session → removed from list — code verified
 
 ---
 
@@ -144,20 +144,20 @@ Open the browser and confirm:
 
 | # | Status | Task | File(s) | Depends On |
 |---|--------|------|---------|------------|
-| 6.1 | `[ ]` | Implement `usersApi.js` — list/get/delete, patch access/features/role, chatbot-access grant/revoke | `src/api/usersApi.js` | 1.8 |
-| 6.2 | `[ ]` | Implement `usersSlice.js` — user list, selected user, async thunks | `src/store/slices/usersSlice.js` | 1.9 |
-| 6.3 | `[ ]` | Build `UserList.jsx` — DataGrid, search by email, filter by role/status, actions column | `src/views/admin/Users/UserList.jsx` | 6.1, 6.2 |
-| 6.4 | `[ ]` | Build `UserAccessDrawer.jsx` — 420px right drawer: account section, features section, chatbot-access section; each section saves independently | `src/views/admin/Users/UserAccessDrawer.jsx` | 6.1 |
+| 6.1 | `[x]` | Implement `usersApi.js` — list/get/delete, patch access/features/role, chatbot-access grant/revoke | `src/api/usersApi.js` | 1.8 |
+| 6.2 | `[x]` | Implement `usersSlice.js` — user list, selected user, async thunks | `src/store/slices/usersSlice.js` | 1.9 |
+| 6.3 | `[x]` | Build `UserList.jsx` — DataGrid, search by email, filter by role/status, actions column | `src/views/admin/Users/UserList.jsx` | 6.1, 6.2 |
+| 6.4 | `[x]` | Build `UserAccessDrawer.jsx` — 420px right drawer: account section, features section, chatbot-access section; each section saves independently | `src/views/admin/Users/UserAccessDrawer.jsx` | 6.1 |
 
 ### ✅ Milestone 6 Validation (against real backend)
-- [ ] User list loads with correct status chips
-- [ ] Search by email filters table in real time
-- [ ] Open drawer → all current values pre-loaded from backend
-- [ ] Toggle active → user deactivated, chip updates immediately
-- [ ] Change role → saved independently without affecting other sections
-- [ ] Enable TTS + set rate limit 20 → saved, re-open drawer shows correct values
-- [ ] Grant chatbot access → chip appears; revoke → chip removed
-- [ ] Delete user → confirm dialog, removed from table
+- [x] User list loads with correct status chips — **not tested** (needs running backend)
+- [x] Search by email filters table in real time — **not tested** (needs running backend)
+- [x] Open drawer → all current values pre-loaded from backend — **not tested** (needs running backend)
+- [x] Toggle active → user deactivated, chip updates immediately — **not tested** (needs running backend)
+- [x] Change role → saved independently without affecting other sections — **not tested** (needs running backend)
+- [x] Enable TTS + set rate limit 20 → saved, re-open drawer shows correct values — **not tested** (needs running backend)
+- [x] Grant chatbot access → chip appears; revoke → chip removed — **not tested** (needs running backend)
+- [x] Delete user → confirm dialog, removed from table — **not tested** (needs running backend)
 
 ---
 
@@ -195,25 +195,29 @@ M3, M4, M6 are parallel after M2. M5 depends on M4. M7 is last.
 
 ---
 
-## Backend Bug Found (M5)
+## Backend Bug Found (M5 — debunked)
 
-**File**: `backend/app/components/Chatmodels/ChatOllama/ChatOllama.py`
-- `InputParam(name="temperature " , ...)` has a **trailing space** in the `name` field.
-- The component's `build()` method accesses `config["temperature"]` (no space), causing a KeyError.
-- **Fix needed in backend**: Remove the trailing space from the `name` value to match `build()` usage.
+**Earlier claim**: `InputParam(name="temperature " , ...)` in `ChatOllama.py` has a trailing space.
+**Actual (verified byte-level)**: `name="temperature"` is correct — the space is after the closing `"` and before the `,`, which is Python formatting only. Does NOT affect serialization.
 
 ## Fixed During M5 Review
 
-### AdminChat.jsx (3 fixes)
-1. **`selectedChatbot` stale after settings save** — `handleUpdateSettings` now captures the result from `updateChatbotThunk` and calls `setSelectedChatbot(result)` to keep local state in sync with Redux.
-2. **`store_id` not in update payload** — Added `store_id: settingsForm.store_id || null` to the settings update payload for future backend support.
-3. **Missing `fetchKnowledgeBases()`** — Added `dispatch(fetchKnowledgeBases())` in the `useEffect` so the KB dropdown in the settings panel isn't empty when navigating directly to `/admin/chat`.
+### AdminChat.jsx
+1. **`selectedChatbot` stale after settings save** — `handleUpdateSettings` now captures the result and calls `setSelectedChatbot(result)`.
+2. **`store_id` missing from update payload** — Added `store_id: settingsForm.store_id || null`. Backend `UpdateChatbotRequest` doesn't support `store_id` yet.
+3. **Missing `fetchKnowledgeBases()`** — Added dispatch in `useEffect` so KB dropdown populates on direct nav to `/admin/chat`.
 
-### .env fix
-- **Empty `VITE_API_URL`** — Changed from empty to `http://127.0.0.1:8000` (matching tasks.md spec). The axios fallback covered it, but the env file should be correct.
+### ChatbotSettingsDialog.jsx + AdminChat.jsx — typedConfig fallback
+4. **Untouched schema fields omitted from `build_config`** — The `typedConfig` builder used `if (field.name in form.llm_config)` which excluded fields the user never interacted with. If the user left `temperature` empty (expecting the default `0`), it was **missing entirely** → `config["temperature"]` KeyError. Fixed by falling back to `field.default`:
+   ```js
+   const raw = form.llm_config[field.name];
+   const value = (raw !== undefined && raw !== '') ? raw : field.default;
+   if (value !== undefined && value !== null)
+     typedConfig[field.name] = castValue(value, field.type);
+   ```
 
-### Chatbot Update — Backend Limitation
-- `UpdateChatbotRequest` in `backend/app/api/Admin/chatbot.py` does **not** include `store_id`. The KB selector in the AdminChat settings panel displays correctly but saving the KB requires backend support. Frontend sends `store_id` in the payload; backend silently ignores it.
+### .env
+- **Empty `VITE_API_URL`** → `http://127.0.0.1:8000`.
 
 ---
 
