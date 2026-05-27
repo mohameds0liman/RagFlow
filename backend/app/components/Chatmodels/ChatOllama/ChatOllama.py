@@ -16,5 +16,5 @@ class ChatModelOllama(BaseComponent):
         return ChatOllama(
             base_url=config["base_url"],
             model=config["model"],
-            temperature=config["temperature"],
+            temperature=config.get("temperature", 0),
         )

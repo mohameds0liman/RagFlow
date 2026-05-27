@@ -35,6 +35,7 @@ import {
   fetchChatbots,
   updateChatbot as updateChatbotThunk,
 } from '../../../store/slices/chatbotSlice';
+import { fetchKnowledgeBases } from '../../../store/slices/kbSlice';
 
 const CHAIN_TYPES = ['ConversationalRetrievalChain'];
 const MEMORY_TYPES = [
@@ -84,6 +85,7 @@ const AdminChat = () => {
 
   useEffect(() => {
     dispatch(fetchChatbots());
+    dispatch(fetchKnowledgeBases());
   }, [dispatch]);
 
   const loadSessionsAndMessages = useCallback(async (chatbot) => {
@@ -205,8 +207,10 @@ const AdminChat = () => {
     const typedConfig = {};
     if (llmSchema?.inputs) {
       llmSchema.inputs.forEach((field) => {
-        if (field.name in settingsForm.llm_config) {
-          typedConfig[field.name] = castValue(settingsForm.llm_config[field.name], field.type);
+        const raw = settingsForm.llm_config[field.name];
+        const value = (raw !== undefined && raw !== '') ? raw : field.default;
+        if (value !== undefined && value !== null) {
+          typedConfig[field.name] = castValue(value, field.type);
         }
       });
     }
@@ -214,6 +218,7 @@ const AdminChat = () => {
     const payload = {
       name: settingsForm.name.trim(),
       description: settingsForm.description.trim() || null,
+      store_id: settingsForm.store_id || null,
       llm_config: settingsForm.llm_provider
         ? { name: settingsForm.llm_provider, build_config: typedConfig }
         : null,
@@ -225,9 +230,10 @@ const AdminChat = () => {
     };
 
     try {
-      await dispatch(
+      const result = await dispatch(
         updateChatbotThunk({ id: selectedChatbot.id, payload })
       ).unwrap();
+      setSelectedChatbot(result);
       enqueueSnackbar('Settings updated', { variant: 'success' });
     } catch (err) {
       enqueueSnackbar(err || 'Failed to update settings', { variant: 'error' });

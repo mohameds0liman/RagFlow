@@ -144,8 +144,10 @@ const ChatbotSettingsDialog = ({ open, onClose, existingBot }) => {
     const typedConfig = {};
     if (llmSchema?.inputs) {
       llmSchema.inputs.forEach((field) => {
-        if (field.name in form.llm_config) {
-          typedConfig[field.name] = castValue(form.llm_config[field.name], field.type);
+        const raw = form.llm_config[field.name];
+        const value = (raw !== undefined && raw !== '') ? raw : field.default;
+        if (value !== undefined && value !== null) {
+          typedConfig[field.name] = castValue(value, field.type);
         }
       });
     }

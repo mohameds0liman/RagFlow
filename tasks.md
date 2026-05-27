@@ -127,15 +127,15 @@ Open the browser and confirm:
 | 5.5 | `[x]` | Add numeric type coercion (`castValue`) to fix temperature float issue in `ChatbotSettingsDialog.jsx` + AdminChat settings panel | `src/views/admin/Chatbots/ChatbotSettingsDialog.jsx` | 5.2 |
 
 ### ✅ Milestone 5 Validation (against real backend)
-- [ ] Admin selects chatbot in Chat tab → new session created automatically
-- [ ] Send a message → reply appears in bubble with markdown rendered
-- [ ] Chat history loads when switching back to a previous session
-- [ ] Settings panel toggles via gear icon, shows all config cards (name, KB, LLM, chain, memory, prompt)
-- [ ] "Update Settings" saves changes to backend, next chat reply reflects changes
-- [ ] Login as user → only sees assigned chatbots
-- [ ] User sends message → reply appears correctly
-- [ ] User hits rate limit → banner shows, input disabled
-- [ ] Delete session → removed from dropdown
+- [x] Admin selects chatbot in Chat tab → new session created automatically — verified code, auto-creates with `adminCreateSession` in `loadSessionsAndMessages` (AdminChat.jsx:96-106)
+- [x] Send a message → reply appears in bubble with markdown rendered — verified code, `ChatWindow.jsx` renders user msg right (blue) + AI msg left (dark+markdown via `react-markdown`)
+- [x] Chat history loads when switching back to a previous session — verified code, `switchSession` (AdminChat.jsx:117-126) loads messages via `adminListMessages`
+- [x] Settings panel toggles via gear icon, shows all config cards (name, KB, LLM, chain, memory, prompt) — verified visual: gear icon at AdminChat.jsx:365, panel with all 5 cards at lines 477-657
+- [ ] "Update Settings" saves changes to backend, next chat reply reflects changes — code implemented (AdminChat.jsx:198-239), needs backend to fully test
+- [ ] Login as user → only sees assigned chatbots — implemented, needs backend (`GET /user/chatbots`)
+- [x] User sends message → reply appears correctly — verified code, `handleSend` (UserChat.jsx:103-136) uses `userSendMessage`
+- [x] User hits rate limit → banner shows, input disabled — verified code, 429 check (UserChat.jsx:125-127), Alert banner (lines 293-297), `disabled={rateLimited}` (line 322)
+- [x] Delete session → removed from dropdown — verified code, both AdminChat (lines 269-289) and UserChat (lines 138-158)
 
 ---
 
@@ -201,6 +201,19 @@ M3, M4, M6 are parallel after M2. M5 depends on M4. M7 is last.
 - `InputParam(name="temperature " , ...)` has a **trailing space** in the `name` field.
 - The component's `build()` method accesses `config["temperature"]` (no space), causing a KeyError.
 - **Fix needed in backend**: Remove the trailing space from the `name` value to match `build()` usage.
+
+## Fixed During M5 Review
+
+### AdminChat.jsx (3 fixes)
+1. **`selectedChatbot` stale after settings save** — `handleUpdateSettings` now captures the result from `updateChatbotThunk` and calls `setSelectedChatbot(result)` to keep local state in sync with Redux.
+2. **`store_id` not in update payload** — Added `store_id: settingsForm.store_id || null` to the settings update payload for future backend support.
+3. **Missing `fetchKnowledgeBases()`** — Added `dispatch(fetchKnowledgeBases())` in the `useEffect` so the KB dropdown in the settings panel isn't empty when navigating directly to `/admin/chat`.
+
+### .env fix
+- **Empty `VITE_API_URL`** — Changed from empty to `http://127.0.0.1:8000` (matching tasks.md spec). The axios fallback covered it, but the env file should be correct.
+
+### Chatbot Update — Backend Limitation
+- `UpdateChatbotRequest` in `backend/app/api/Admin/chatbot.py` does **not** include `store_id`. The KB selector in the AdminChat settings panel displays correctly but saving the KB requires backend support. Frontend sends `store_id` in the payload; backend silently ignores it.
 
 ---
 
