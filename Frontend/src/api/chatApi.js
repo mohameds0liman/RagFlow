@@ -30,5 +30,8 @@ export const userDeleteSession = (sessionId) =>
 export const userListMessages = (sessionId) =>
   api.get(`/user/sessions/${sessionId}/messages`);
 
+export const userUpdateSession = (sessionId, data) =>
+  api.put(`/user/sessions/${sessionId}`, data);
+
 export const userSendMessage = (chatbotId, sessionId, message) =>
   api.post(`/user/chatbots/${chatbotId}/sessions/${sessionId}/chat`, { message });

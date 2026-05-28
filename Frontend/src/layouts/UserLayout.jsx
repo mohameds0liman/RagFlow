@@ -1,106 +1,85 @@
-import { useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { Outlet } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import {
   Box,
   AppBar,
   Toolbar,
   Typography,
-  IconButton,
   Avatar,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
   useTheme,
 } from '@mui/material';
-import { IconLogout, IconSun, IconMoon } from '@tabler/icons-react';
-import { logout } from '../store/slices/authSlice';
-import { toggleTheme } from '../store/slices/themeSlice';
 
 const UserLayout = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
   const theme = useTheme();
-  const themeMode = useSelector((state) => state.theme.mode);
-  const [anchorEl, setAnchorEl] = useState(null);
-
-  const handleLogout = async () => {
-    setAnchorEl(null);
-    await dispatch(logout());
-    navigate('/login');
-  };
+  const selectedChatbot = useSelector((state) => state.userChat.selectedChatbot);
+  const activeSessionId = useSelector((state) => state.userChat.activeSessionId);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <AppBar
         position="fixed"
         sx={{
           backgroundColor: theme.palette.background.paper,
           borderBottom: `1px solid ${theme.palette.divider}`,
           boxShadow: 'none',
+          zIndex: theme.zIndex.drawer + 1,
         }}
       >
-        <Toolbar sx={{ minHeight: '64px !important' }}>
-          <Avatar
-            sx={{
-              bgcolor: theme.palette.primary.main,
-              width: 32,
-              height: 32,
-              borderRadius: 1.5,
-              mr: 1.5,
-              fontWeight: 700,
-              fontSize: '0.875rem',
-            }}
-          >
-            R
-          </Avatar>
-          <Typography
-            variant="h6"
-            sx={{ fontWeight: 700, color: theme.palette.text.primary, flexGrow: 1 }}
-          >
-            RAGFlow
-          </Typography>
-          <IconButton onClick={() => dispatch(toggleTheme())} sx={{ mr: 1 }}>
-            {themeMode === 'dark' ? <IconSun size={20} /> : <IconMoon size={20} />}
-          </IconButton>
-          <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
+        <Toolbar sx={{ minHeight: '56px !important', gap: 2 }}>
+          {/* Logo */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
             <Avatar
               sx={{
-                width: 32,
-                height: 32,
                 bgcolor: theme.palette.primary.main,
-                fontSize: '0.875rem',
-                fontWeight: 600,
+                width: 28,
+                height: 28,
+                borderRadius: 1,
+                fontWeight: 700,
+                fontSize: '0.75rem',
               }}
             >
-              U
+              R
             </Avatar>
-          </IconButton>
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={() => setAnchorEl(null)}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-          >
-            <MenuItem onClick={handleLogout}>
-              <ListItemIcon>
-                <IconLogout size={18} />
-              </ListItemIcon>
-              <ListItemText>Logout</ListItemText>
-            </MenuItem>
-          </Menu>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 700,
+                color: theme.palette.text.primary,
+                display: { xs: 'none', sm: 'block' },
+              }}
+            >
+              RAGFlow
+            </Typography>
+          </Box>
+
+          {/* Current chatbot name - only when a session is active */}
+          <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', minWidth: 0 }}>
+            {selectedChatbot && activeSessionId && (
+              <Typography
+                variant="subtitle2"
+                sx={{
+                  fontWeight: 600,
+                  color: theme.palette.text.secondary,
+                  px: 2,
+                  py: 0.5,
+                  borderRadius: 1,
+                  bgcolor: `${theme.palette.primary.main}08`,
+                }}
+              >
+                {selectedChatbot.name}
+              </Typography>
+            )}
+          </Box>
         </Toolbar>
       </AppBar>
 
       <Box
         component="main"
         sx={{
-          flexGrow: 1,
-          mt: '64px',
+          flex: 1,
+          mt: '56px',
           backgroundColor: theme.palette.background.default,
-          minHeight: 'calc(100vh - 64px)',
+          overflow: 'hidden',
         }}
       >
         <Outlet />

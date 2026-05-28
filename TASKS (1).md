@@ -180,6 +180,63 @@ Open the browser and confirm:
 
 ---
 
+## Milestone 8 — User Experience Redesign & Profiles
+> Goal: Redesign `UserChat.jsx` into a clean ChatGPT-style layout that feels nothing like the admin panel. Add profile pages for both roles. Wire all profile/settings API endpoints.
+
+### 8A — UserChat Redesign
+
+| # | Status | Task | File(s) | Depends On |
+|---|--------|------|---------|------------|
+| 8.1 | `[ ]` | Redesign `UserLayout.jsx` — full-height, no sidebar; top navbar: logo left, chatbot switcher center, user avatar + dropdown menu right (Profile, Logout) | `src/layouts/UserLayout.jsx` | M5 |
+| 8.2 | `[ ]` | Build `ChatbotSwitcher.jsx` — pill/tab bar in top navbar listing all assigned chatbots by name; active chatbot highlighted in `#4B72FF`; clicking a tab switches chatbot and reloads its sessions without auto-creating a new one | `src/components/ChatbotSwitcher.jsx` | 5.1 |
+| 8.3 | `[ ]` | Redesign `UserChat.jsx` — on mount: load sessions for the first assigned chatbot; switching tab via `ChatbotSwitcher` reloads session list for that chatbot; no chatbot dropdown in left panel anymore | `src/views/user/UserChat.jsx` | 8.1, 8.2 |
+| 8.4 | `[ ]` | Style session list (left panel, 260px) — ChatGPT-style: "New Chat" button at top; session title = first user message truncated to 30 chars or "New Conversation"; relative timestamp (Today / Yesterday / older date); hover shows delete icon; active session highlighted | `src/views/user/UserChat.jsx` | 8.3 |
+| 8.5 | `[ ]` | Style chat area (center, full remaining width) — no card border, clean dark background, assistant avatar = chatbot name initial in colored circle, user avatar = user initial; message timestamps appear on hover; smooth auto-scroll | `src/components/ChatWindow.jsx` | 8.3 |
+| 8.6 | `[ ]` | Style input bar — full-width rounded textarea at bottom, send button inside input on right, disabled + spinner while awaiting reply, `Shift+Enter` for newline, `Enter` to send | `src/components/ChatWindow.jsx` | 8.5 |
+| 8.7 | `[ ]` | Rate limit indicator — show "X / Y messages today" counter in top navbar next to avatar; when limit hit: soft warning banner above input bar, input disabled, counter turns red | `src/views/user/UserChat.jsx` | 8.3 |
+
+### 8B — User Profile & Settings
+
+| # | Status | Task | File(s) | Depends On |
+|---|--------|------|---------|------------|
+| 8.8 | `[ ]` | Implement `profileApi.js` — `GET /user/profile`, `PUT /user/profile`, `POST /auth/change-password` | `src/api/profileApi.js` | 1.8 |
+| 8.9 | `[ ]` | Build `UserProfilePage.jsx` — route `/profile`; two `MainCard` sections: "Personal Info" (name, email fields + read-only role badge) with Save button; "Change Password" (current password, new password, confirm password) with Save button; each section saves independently with its own loading state | `src/views/user/UserProfilePage.jsx` | 8.8 |
+| 8.10 | `[ ]` | Add `/profile` route to `UserRoutes.jsx`; link from avatar dropdown in `UserLayout.jsx` | `src/routes/UserRoutes.jsx`, `src/layouts/UserLayout.jsx` | 8.9 |
+
+### 8C — Admin Profile & Settings
+
+| # | Status | Task | File(s) | Depends On |
+|---|--------|------|---------|------------|
+| 8.11 | `[ ]` | Build `AdminProfilePage.jsx` — route `/admin/profile`; same two-card layout as `UserProfilePage`: Personal Info + Change Password; reuses `profileApi.js`; each section saves independently | `src/views/admin/AdminProfilePage.jsx` | 8.8 |
+| 8.12 | `[ ]` | Build `AdminSettingsPage.jsx` — route `/admin/settings`; placeholder `MainCard` sections for future platform config; at minimum renders without errors and shows a "Coming Soon" state per section | `src/views/admin/AdminSettingsPage.jsx` | 1.8 |
+| 8.13 | `[ ]` | Add Profile + Settings to admin sidebar bottom section (above logout, separated by divider); link topbar avatar to `/admin/profile` | `src/layouts/AdminLayout.jsx` | 8.11, 8.12 |
+
+### ✅ Milestone 8 Validation
+
+**UserChat redesign:**
+- [ ] Chatbot switcher tabs visible in top navbar — all assigned chatbots shown
+- [ ] Switching chatbot tab loads that chatbot's sessions, no blank flash, no auto-new-session
+- [ ] Sessions list shows truncated first-message title and relative timestamp
+- [ ] "New Chat" creates session and opens empty chat area
+- [ ] Assistant messages show chatbot initial avatar, user messages show user initial avatar
+- [ ] Message timestamps appear on hover only
+- [ ] Rate limit counter in navbar; hitting limit disables input and shows banner
+- [ ] `Enter` sends message, `Shift+Enter` adds newline
+- [ ] Layout looks clearly different from admin — no card borders on chat area, clean minimal feel
+
+**Profiles:**
+- [ ] Admin sidebar shows Profile and Settings links in bottom section with divider
+- [ ] Admin topbar avatar links to `/admin/profile`
+- [ ] Admin profile loads name and email pre-filled from `GET /user/profile`
+- [ ] Admin updates name → saved, success snackbar
+- [ ] Admin wrong current password → error snackbar from backend
+- [ ] Admin settings page loads without errors
+- [ ] User avatar dropdown shows Profile and Logout
+- [ ] User profile page loads and saves correctly
+- [ ] User change password works end-to-end
+
+---
+
 ## Dependency Graph
 
 ```
@@ -189,10 +246,12 @@ M1 Scaffold & Design System
         ├── M4 Chatbots ──── M5 Chat System ◄───┘ (chatbot needs KB)
         ├── M6 User Management
         ├── M7 Dashboard & Polish (depends on M3–M6)
+        └── M8 UX Redesign & Profiles (depends on M5)
 ```
 
----
+M3, M4, M6 are parallel after M2. M5 depends on M4. M7 and M8 are both final-layer — safe to work in parallel since M8 only touches user views and profile pages.
 
+---
 
 ## Backend Bug Found (M5 — debunked)
 

@@ -19,7 +19,10 @@ import DocumentStoreDetail from './views/admin/DocumentStores/DocumentStoreDetai
 import ChatbotList from './views/admin/Chatbots/ChatbotList';
 import AdminChat from './views/admin/Chat/AdminChat';
 import UserList from './views/admin/Users/UserList';
+import AdminProfilePage from './views/admin/AdminProfilePage';
+import AdminSettingsPage from './views/admin/AdminSettingsPage';
 import UserChat from './views/user/UserChat';
+import UserProfilePage from './views/user/UserProfilePage';
 
 function App() {
   const mode = useSelector((state) => state.theme.mode);
@@ -49,6 +52,8 @@ function App() {
           <Route path="chatbots/:id" element={<Navigate to="/admin/chatbots" replace />} />
           <Route path="chat" element={<AdminChat />} />
           <Route path="users" element={<UserList />} />
+          <Route path="profile" element={<AdminProfilePage />} />
+          <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
 
         <Route
@@ -60,6 +65,7 @@ function App() {
           }
         >
           <Route index element={<UserChat />} />
+          <Route path="profile" element={<UserProfilePage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />

@@ -4,6 +4,7 @@ import kbReducer from './slices/kbSlice';
 import chatbotReducer from './slices/chatbotSlice';
 import usersReducer from './slices/usersSlice';
 import themeReducer from './slices/themeSlice';
+import userChatReducer from './slices/userChatSlice';
 
 const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ const store = configureStore({
     chatbots: chatbotReducer,
     users: usersReducer,
     theme: themeReducer,
+    userChat: userChatReducer,
   },
 });
 

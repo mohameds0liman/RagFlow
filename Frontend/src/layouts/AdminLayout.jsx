@@ -24,6 +24,8 @@ import {
   IconRobot,
   IconMessage,
   IconUsers,
+  IconUserCircle,
+  IconSettings,
   IconLogout,
   IconMenu2,
   IconSun,
@@ -40,6 +42,11 @@ const navItems = [
   { label: 'Chatbots', path: '/admin/chatbots', icon: IconRobot },
   { label: 'Chat', path: '/admin/chat', icon: IconMessage },
   { label: 'Users', path: '/admin/users', icon: IconUsers },
+];
+
+const bottomNavItems = [
+  { label: 'Profile', path: '/admin/profile', icon: IconUserCircle },
+  { label: 'Settings', path: '/admin/settings', icon: IconSettings },
 ];
 
 const AdminLayout = () => {
@@ -121,6 +128,51 @@ const AdminLayout = () => {
           );
         })}
       </List>
+      <Divider sx={{ borderColor: theme.palette.divider }} />
+      <List sx={{ px: 1.5, py: 1 }}>
+        {bottomNavItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          const Icon = item.icon;
+          return (
+            <ListItemButton
+              key={item.path}
+              onClick={() => {
+                navigate(item.path);
+                setMobileOpen(false);
+              }}
+              sx={{
+                borderRadius: 1.5,
+                mb: 0.5,
+                pl: 2,
+                borderLeft: isActive ? `4px solid ${theme.palette.primary.main}` : '4px solid transparent',
+                backgroundColor: isActive ? `${theme.palette.primary.main}1f` : 'transparent',
+                '&:hover': {
+                  backgroundColor: isActive
+                    ? `${theme.palette.primary.main}26`
+                    : `${theme.palette.primary.main}0f`,
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: 36,
+                  color: isActive ? theme.palette.primary.main : theme.palette.text.secondary,
+                }}
+              >
+                <Icon size={20} />
+              </ListItemIcon>
+              <ListItemText
+                primary={item.label}
+                primaryTypographyProps={{
+                  fontSize: '0.875rem',
+                  fontWeight: isActive ? 600 : 400,
+                  color: isActive ? theme.palette.text.primary : theme.palette.text.secondary,
+                }}
+              />
+            </ListItemButton>
+          );
+        })}
+      </List>
     </Box>
   );
 
@@ -159,6 +211,7 @@ const AdminLayout = () => {
                 bgcolor: theme.palette.primary.main,
                 fontSize: '0.875rem',
                 fontWeight: 600,
+                cursor: 'pointer',
               }}
             >
               A
@@ -171,6 +224,13 @@ const AdminLayout = () => {
             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             transformOrigin={{ vertical: 'top', horizontal: 'right' }}
           >
+            <MenuItem onClick={() => { setAnchorEl(null); navigate('/admin/profile'); }}>
+              <ListItemIcon>
+                <IconUserCircle size={18} />
+              </ListItemIcon>
+              <ListItemText>Profile</ListItemText>
+            </MenuItem>
+            <Divider sx={{ borderColor: theme.palette.divider }} />
             <MenuItem onClick={handleLogout}>
               <ListItemIcon>
                 <IconLogout size={18} />
