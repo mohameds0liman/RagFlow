@@ -3,6 +3,7 @@ from fastapi import (
     HTTPException ,
     Query , Depends ,Body
     )
+from fastapi.responses import FileResponse
 from langchain_community.docstore.document import Document
 
 from app.components.registry import registry
@@ -10,6 +11,7 @@ from app.core.factory import PipelineFactory
 from pydantic import BaseModel
 from typing import Any
 from pathlib import Path
+import inspect
 import os
 import shutil
 import uuid
@@ -91,6 +93,20 @@ def get_component_schema(name: str, category: str = Query(...)):
         return registry.get_component_schema(category=category, name=name)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
+
+@router.get("/components/{category}/{name}/icon")
+def get_component_icon(category: str, name: str):
+    try:
+        comp_cls = registry._store[category][name]
+        if not comp_cls.icon:                                          # ← ADD THIS
+            raise HTTPException(status_code=404, detail="Icon not set")
+        mod_file = inspect.getfile(comp_cls)
+        icon_path = Path(mod_file).parent / comp_cls.icon
+        if not icon_path.exists():
+            raise HTTPException(status_code=404, detail="Icon not found")
+        return FileResponse(str(icon_path), media_type="image/svg+xml")
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Component not found")
 ######################################################################## 
 # define class 
 
@@ -139,6 +155,18 @@ def loader_counts(doc_id, db: Session) -> dict:
     return {
         "chunks_count": db.query(func.count(DocumentChunk.id)).filter(DocumentChunk.doc_id == doc_id).scalar(),
     }
+
+
+# Inside ComponentRegistry class:
+def _icon_url(self, component) -> str | None:
+    if not component.icon:
+        return None
+    # Get the .py file's directory, then look for the .svg next to it
+    mod_file = inspect.getfile(component)
+    icon_path = Path(mod_file).parent / component.icon
+    if icon_path.exists():
+        return f"/api/components/{component.category}/{component.name}/icon"
+    return None
 
 ##############################
 def _validate_store(db: Session, knowledge_base_id: str) -> DocumentStore:

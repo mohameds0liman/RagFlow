@@ -18,6 +18,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { IconX } from '@tabler/icons-react';
+import ComponentIcon from '../../../components/ComponentIcon';
 import * as kbApi from '../../../api/knowledgeBaseApi';
 
 const CONFIG_KEYS = [
@@ -191,7 +192,7 @@ const UpsertionConfigDialog = ({ open, onClose, kbId, existingConfig }) => {
           </Box>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {CONFIG_KEYS.map(({ key, label }) => (
+            {CONFIG_KEYS.map(({ key, label, category }) => (
               <Card
                 key={key}
                 sx={{
@@ -214,7 +215,12 @@ const UpsertionConfigDialog = ({ open, onClose, kbId, existingConfig }) => {
                     sx={{ mb: 1.5 }}
                   >
                     {(componentList[key] || []).map((comp) => (
-                      <MenuItem key={comp.name} value={comp.name}>{comp.name}</MenuItem>
+                      <MenuItem key={comp.name} value={comp.name}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <ComponentIcon category={category} name={comp.name} size={18} />
+                          {comp.name}
+                        </Box>
+                      </MenuItem>
                     ))}
                   </TextField>
                   {renderFields(key, schemas[key])}

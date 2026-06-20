@@ -3,6 +3,7 @@ from langchain_community.vectorstores.chroma import Chroma
 class ChromaVectorStoreComponent(BaseComponent):
     name = "ChromaVectorStore"
     category="vector_store"
+    icon="chroma.svg"
     inputs = [
         InputParam(name="collection_name", type="str", required=True),
         InputParam(name="persist_directory", type="str", default="./chroma_db", required=True),

@@ -19,6 +19,7 @@ import {
 import { IconX } from '@tabler/icons-react';
 import { useDispatch } from 'react-redux';
 import { ingestDocument } from '../../../store/slices/kbSlice';
+import ComponentIcon from '../../../components/ComponentIcon';
 import * as kbApi from '../../../api/knowledgeBaseApi';
 
 const IngestStatusDialog = ({ open, onClose, kbId, document: doc }) => {
@@ -116,7 +117,12 @@ const IngestStatusDialog = ({ open, onClose, kbId, document: doc }) => {
                     sx={{ mb: 1 }}
                   >
                     {loaders.map((l) => (
-                      <MenuItem key={l.name} value={l.name}>{l.name}</MenuItem>
+                      <MenuItem key={l.name} value={l.name}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <ComponentIcon category="loader" name={l.name} size={18} />
+                          {l.name}
+                        </Box>
+                      </MenuItem>
                     ))}
                   </TextField>
                 </CardContent>
@@ -137,7 +143,12 @@ const IngestStatusDialog = ({ open, onClose, kbId, document: doc }) => {
                     sx={{ mb: 1.5 }}
                   >
                     {chunkers.map((c) => (
-                      <MenuItem key={c.name} value={c.name}>{c.name}</MenuItem>
+                      <MenuItem key={c.name} value={c.name}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <ComponentIcon category="chunker" name={c.name} size={18} />
+                          {c.name}
+                        </Box>
+                      </MenuItem>
                     ))}
                   </TextField>
                   <Box sx={{ display: 'flex', gap: 1 }}>

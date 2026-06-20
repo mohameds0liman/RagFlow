@@ -5,7 +5,7 @@ from langchain_community.document_loaders import PyPDFLoader
 class PDFLoaderComponent(BaseComponent):
     name = "PyPDFLoader"
     category="loader"
-    icon = "PDF.png"
+    icon = "pdf.svg"
     inputs = [
         InputParam(name="file_path", type="str", required=True,
                    description="Absolute path to the PDF file"),

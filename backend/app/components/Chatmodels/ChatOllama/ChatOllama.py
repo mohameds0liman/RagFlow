@@ -5,7 +5,7 @@ class ChatModelOllama(BaseComponent):
 
     category="chat_model"
     name="ChatOllama"
-    
+    icon="ollama.svg"
     inputs=[
         InputParam(name="base_url" , type="str" ,default="http://localhost:11434" ,required=True ,description="Model Base URL"),
         InputParam(name="model" , type="str" ,default="llama3.1:8b" , required=True , description="Model Name"),

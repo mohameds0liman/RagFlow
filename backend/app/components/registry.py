@@ -1,5 +1,6 @@
 from app.components.base import BaseComponent
-
+import inspect
+from pathlib import Path
 class ComponentRegistry:
     """
     A singleton phonebook of all available components.
@@ -34,7 +35,18 @@ class ComponentRegistry:
 
     def build(self, category: str, name: str, config: dict):
         return self._store[category][name]().build(config)       
-
+    ########################################################
+    # Helper Function
+    ## that get the icon path using the component parent path
+    def _icon_url(self, component) -> str | None:
+        if not component.icon:
+            return None
+        # Get the .py file's directory, then look for the .svg next to it
+        mod_file = inspect.getfile(component)
+        icon_path = Path(mod_file).parent / component.icon
+        if icon_path.exists():
+            return f"/admin/components/{component.category}/{component.name}/icon"
+        return None
     # ------------------------------------------------------------------
     # Called by admin API → GET /components
     # ------------------------------------------------------------------
@@ -54,11 +66,12 @@ class ComponentRegistry:
             raise KeyError(f"Unknown component: {name}")
         component = self._store[category][name]
         return {
-            "name": component.name,
-            "category": component.category,
-            "icon": f"/icons/{component.icon}" if hasattr(component, "icon") else None,
-            "inputs": [p.model_dump() for p in component.inputs],
-        }
+                "name": component.name,
+                "category": component.category,
+                "icon": component.icon,
+                "icon_path": self._icon_url(component),
+                "inputs": [p.model_dump() for p in component.inputs],
+            }
 
     def list_all_categories(self) -> list[str]:
         return list(self._store.keys())

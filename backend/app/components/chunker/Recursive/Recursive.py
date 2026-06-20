@@ -6,6 +6,7 @@ class RecursiveTextSplitter(BaseComponent):
 
     category="chunker"
     name="RecursiveCharacterTextSplitter"
+    icon="recursive.svg"
     inputs=[
         InputParam(name="chunk_size",type="int" , default=1200 , required=True ),
         InputParam(name="chunk_overlap",type="int" , default=200 , required=True ),
