@@ -97,21 +97,46 @@ def create_chatbot(
 
 
 
-
-
+# ###############################################################
+# Example request body for POST /admin/chatbots:
+# ###############################################################
 # {
-#   "name": "PIF_2024",
-#   "description": "This the is the First end to end Chat bot use the knowledge base Admin_Side that contain PIF Annual 2024",
+#   "name": "Support Bot",
+#   "description": "Answers product questions",
 #   "store_id": "05d803a0-2676-4cc8-a8e8-efd9c9ff70cc",
 #   "status": "active",
-#   "llm_config": {"name": "ChatOllama","build_config": { "base_url": "http://localhost:11434","model": "gemma4:31b-cloud","temperature": 0}},
-#   "chain_config": {},  # can add "chain_type" : "stuff" -> map_reduce - refine - map_rerank  and also can add  "k": 5  for the retrieving but these two are negelcted in the factory code
-#   "memory_config": {},
-#   "prompt_config": {}
+#   "llm_config": {
+#     "name": "ChatOllama",
+#     "build_config": {
+#       "base_url": "http://localhost:11434",
+#       "model": "gemma4:31b-cloud",
+#       "temperature": 0
+#     }
+#   },
+#   "chain_config": {
+#     "chain_type": "stuff",
+#     "k": 4
+#   },
+#   "memory_config": {
+#     "name": "ConversationBufferWindowMemory",
+#     "build_config": {
+#       "k": 10,
+#       "return_messages": true
+#     }
+#   },
+#   "prompt_config": {
+#     "template": "Use the following pieces of context to answer the question at the end.\nIf you don't know the answer, just say that you don't know.\n{context}\nChat History:\n{chat_history}\nQuestion: {question}\nHelpful Answer:"
+#   }
 # }
-
-
-#####################
+#
+# Or use defaults (omit fields):
+# {
+#   "name": "Simple Bot",
+#   "store_id": "...",
+#   "llm_config": {"name": "ChatOllama", "build_config": {"base_url": "http://localhost:11434", "model": "llama3.1:8b"}}
+# }
+#
+##########################################
 
 @router.get("/chatbots")
 def list_chatbots(

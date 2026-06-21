@@ -27,29 +27,13 @@ const UserLayout = () => {
       >
         <Toolbar sx={{ minHeight: '56px !important', gap: 2 }}>
           {/* Logo */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
-            <Avatar
-              sx={{
-                bgcolor: theme.palette.primary.main,
-                width: 28,
-                height: 28,
-                borderRadius: 1,
-                fontWeight: 700,
-                fontSize: '0.75rem',
-              }}
-            >
-              R
-            </Avatar>
-            <Typography
-              variant="subtitle1"
-              sx={{
-                fontWeight: 700,
-                color: theme.palette.text.primary,
-                display: { xs: 'none', sm: 'block' },
-              }}
-            >
-              RAGFlow
-            </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+            <Box
+              component="img"
+              src="/logo.png"
+              alt="RAGFlow"
+              sx={{ height: 28, width: 'auto' }}
+            />
           </Box>
 
           {/* Current chatbot name - only when a session is active */}

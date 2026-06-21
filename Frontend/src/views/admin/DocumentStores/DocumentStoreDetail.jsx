@@ -21,6 +21,7 @@ import {
 import {
   IconArrowLeft,
   IconUpload,
+  IconWorld,
   IconSettings,
   IconPlayerPlay,
   IconCloudUpload,
@@ -43,6 +44,7 @@ import {
 } from '../../../store/slices/kbSlice';
 import UpsertionConfigDialog from './UpsertionConfigDialog';
 import UploadDocumentDialog from './UploadDocumentDialog';
+import AddWebPageDialog from './AddWebPageDialog';
 import IngestStatusDialog from './IngestStatusDialog';
 import ChunksViewDialog from './ChunksViewDialog';
 
@@ -52,10 +54,11 @@ const DocumentStoreDetail = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { enqueueSnackbar } = useSnackbar();
-  const { list, selectedKB, documents, documentLoading, upsertLoading } = useSelector((state) => state.knowledgeBases);
+  const { list, selectedKB, documents, documentLoading } = useSelector((state) => state.knowledgeBases);
 
   const [upsertConfigOpen, setUpsertConfigOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [webPageOpen, setWebPageOpen] = useState(false);
   const [ingestOpen, setIngestOpen] = useState(false);
   const [chunksOpen, setChunksOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -90,16 +93,19 @@ const DocumentStoreDetail = () => {
     }
   }, [dispatch, id, deleteConfirm, enqueueSnackbar]);
 
+  const [upsertingDocId, setUpsertingDocId] = useState(null);
   const [recentUpsert, setRecentUpsert] = useState(null);
 
   const handleUpsert = useCallback(async (doc) => {
+    setUpsertingDocId(doc.id);
     try {
       await dispatch(triggerUpsert({ id, docId: doc.id })).unwrap();
+      setUpsertingDocId(null);
       setRecentUpsert(doc.id);
       setTimeout(() => setRecentUpsert(null), 2000);
     } catch (err) {
+      setUpsertingDocId(null);
       const msg = typeof err === 'string' ? err : JSON.stringify(err?.response?.data || err);
-      console.error('[Upsert]', doc.id, err);
       enqueueSnackbar(msg, { variant: 'error' });
     }
   }, [dispatch, id, enqueueSnackbar]);
@@ -144,6 +150,13 @@ const DocumentStoreDetail = () => {
             </Button>
             <Button
               variant="outlined"
+              startIcon={<IconWorld size={18} />}
+              onClick={() => setWebPageOpen(true)}
+            >
+              Add Web Page
+            </Button>
+            <Button
+              variant="outlined"
               startIcon={<IconSettings size={18} />}
               onClick={() => setUpsertConfigOpen(true)}
             >
@@ -164,16 +177,24 @@ const DocumentStoreDetail = () => {
           <Box sx={{ textAlign: 'center', py: 6 }}>
             <IconFileDescription size={40} style={{ color: theme.palette.text.disabled }} />
             <Typography variant="body1" sx={{ mt: 1, color: theme.palette.text.secondary }}>
-              No documents uploaded yet
+              No documents added yet
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<IconUpload size={18} />}
-              onClick={() => setUploadOpen(true)}
-              sx={{ mt: 2 }}
-            >
-              Upload Document
-            </Button>
+            <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'center' }}>
+              <Button
+                variant="contained"
+                startIcon={<IconUpload size={18} />}
+                onClick={() => setUploadOpen(true)}
+              >
+                Upload Document
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<IconWorld size={18} />}
+                onClick={() => setWebPageOpen(true)}
+              >
+                Add Web Page
+              </Button>
+            </Box>
           </Box>
         ) : (
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 3 }}>
@@ -194,19 +215,34 @@ const DocumentStoreDetail = () => {
                 >
                   <CardContent sx={{ pb: 1, flex: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                      <IconFile size={24} style={{ color: theme.palette.primary.main, marginTop: 2, flexShrink: 0 }} />
+                      {doc.file_type === 'url' ? (
+                        <IconWorld size={24} style={{ color: theme.palette.primary.main, marginTop: 2, flexShrink: 0 }} />
+                      ) : (
+                        <IconFile size={24} style={{ color: theme.palette.primary.main, marginTop: 2, flexShrink: 0 }} />
+                      )}
                       <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Typography variant="body1" noWrap sx={{ fontWeight: 600, color: theme.palette.text.primary, fontSize: '1rem' }}>
                           {doc.file_name}
                         </Typography>
+                        {doc.file_type === 'url' && (
+                          <Typography variant="caption" noWrap sx={{ color: theme.palette.text.disabled, mt: 0.25, display: 'block' }}>
+                            {doc.file_path}
+                          </Typography>
+                        )}
                       </Box>
                     </Box>
                   </CardContent>
                       <CardActions sx={{ pt: 0, px: 2, pb: 1.5, display: 'flex', justifyContent: 'space-between' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <StatusChip status={doc.status} />
-                          <Chip label={`.${doc.file_type}`} size="small" variant="outlined" sx={{ color: theme.palette.primary.main, borderColor: theme.palette.primary.main, borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600, height: 28 }} />
-                          <Chip label={`${doc.file_size_mb?.toFixed(2)} MB`} size="small" variant="outlined" sx={{ color: theme.palette.text.secondary, borderColor: theme.palette.divider, borderRadius: '8px', fontSize: '0.8rem', fontWeight: 500, height: 28 }} />
+                          {doc.file_type === 'url' ? (
+                            <Chip label="URL" size="small" variant="outlined" sx={{ color: theme.palette.primary.main, borderColor: theme.palette.primary.main, borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600, height: 28 }} />
+                          ) : (
+                            <Chip label={`.${doc.file_type}`} size="small" variant="outlined" sx={{ color: theme.palette.primary.main, borderColor: theme.palette.primary.main, borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600, height: 28 }} />
+                          )}
+                          {doc.file_type !== 'url' && (
+                            <Chip label={`${doc.file_size_mb?.toFixed(2)} MB`} size="small" variant="outlined" sx={{ color: theme.palette.text.secondary, borderColor: theme.palette.divider, borderRadius: '8px', fontSize: '0.8rem', fontWeight: 500, height: 28 }} />
+                          )}
                           <Chip label={`${doc.chunks_count ?? 0} chunks`} size="small" variant="outlined" sx={{ color: theme.palette.warning.main, borderColor: theme.palette.warning.main, borderRadius: '8px', fontSize: '0.8rem', fontWeight: 500, height: 28 }} />
                         </Box>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
@@ -224,14 +260,14 @@ const DocumentStoreDetail = () => {
                         <IconButton
                           size="small"
                           onClick={() => handleUpsert(doc)}
-                          disabled={doc.status !== 'ready' || upsertLoading}
+                          disabled={doc.status !== 'ready' || upsertingDocId === doc.id}
                           sx={{
                             width: 32,
                             height: 32,
                             color: recentUpsert === doc.id ? theme.palette.success.main : theme.palette.primary.main,
                           }}
                         >
-                          {upsertLoading ? (
+                          {upsertingDocId === doc.id ? (
                             <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, ml: -1, mt: -1 }}>
                               <IconCloudUpload size={18} />
                               <CircularProgress size={32} thickness={2.5} sx={{ position: 'absolute', top: 0, left: 0, color: theme.palette.primary.main }} />
@@ -285,6 +321,18 @@ const DocumentStoreDetail = () => {
         onClose={(uploaded) => {
           setUploadOpen(false);
           if (uploaded) {
+            dispatch(fetchDocuments(id));
+            dispatch(fetchKnowledgeBases());
+          }
+        }}
+        kbId={id}
+      />
+
+      <AddWebPageDialog
+        open={webPageOpen}
+        onClose={(added) => {
+          setWebPageOpen(false);
+          if (added) {
             dispatch(fetchDocuments(id));
             dispatch(fetchKnowledgeBases());
           }

@@ -31,18 +31,23 @@ import ChatWindow from '../../../components/ChatWindow';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import * as chatApi from '../../../api/chatApi';
 import * as kbApi from '../../../api/knowledgeBaseApi';
+import * as chatbotApi from '../../../api/chatbotApi';
 import {
   fetchChatbots,
   updateChatbot as updateChatbotThunk,
 } from '../../../store/slices/chatbotSlice';
 import { fetchKnowledgeBases } from '../../../store/slices/kbSlice';
 
-const CHAIN_TYPES = ['ConversationalRetrievalChain'];
-const MEMORY_TYPES = [
-  { value: 'buffer', label: 'Buffer Memory' },
-  { value: 'summary', label: 'Summary Memory' },
-];
+const CHAIN_TYPES = ['stuff', 'map_reduce', 'refine', 'map_rerank'];
 const NUMERIC_TYPES = ['float', 'integer', 'number'];
+
+const DEFAULT_PROMPT_TEMPLATE = `Use the following pieces of context to answer the question at the end.
+If you don't know the answer, just say that you don't know.
+{context}
+Chat History:
+{chat_history}
+Question: {question}
+Helpful Answer:`;
 
 const castValue = (value, type) => {
   if (NUMERIC_TYPES.includes(type)) {
@@ -68,6 +73,13 @@ const AdminChat = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
 
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareBot, setCompareBot] = useState(null);
+  const [compareSession, setCompareSession] = useState(null);
+  const [compareMessages, setCompareMessages] = useState([]);
+  const [compareSending, setCompareSending] = useState(false);
+  const [savedFormSnapshot, setSavedFormSnapshot] = useState(null);
+
   const [llmComponents, setLlmComponents] = useState([]);
   const [llmSchema, setLlmSchema] = useState(null);
   const [settingsLoading, setSettingsLoading] = useState(false);
@@ -78,8 +90,9 @@ const AdminChat = () => {
     store_id: '',
     llm_provider: '',
     llm_config: {},
-    chain_type: 'ConversationalRetrievalChain',
-    memory_type: 'buffer',
+    chain_type: 'stuff',
+    k: 4,
+    last_k_message_pairs: 3,
     prompt_template: '',
   });
 
@@ -147,7 +160,6 @@ const AdminChat = () => {
       const llmCfg = bot.llm_config || {};
       const chainCfg = bot.chain_config || {};
       const promptCfg = bot.prompt_config || {};
-      const memoryCfg = bot.memory_config || {};
 
       setSettingsForm({
         name: bot.name || '',
@@ -155,19 +167,20 @@ const AdminChat = () => {
         store_id: bot.store_id || '',
         llm_provider: llmCfg.name || '',
         llm_config: llmCfg.build_config || {},
-        chain_type: chainCfg.chain_type || 'ConversationalRetrievalChain',
-        memory_type: memoryCfg.memory_type || 'buffer',
-        prompt_template: promptCfg.template || '',
+        chain_type: chainCfg.chain_type || 'stuff',
+        k: chainCfg.k ?? 4,
+        last_k_message_pairs: chainCfg.last_k_message_pairs ?? 3,
+        prompt_template: promptCfg.template || DEFAULT_PROMPT_TEMPLATE,
       });
 
       if (llmCfg.name) {
-          try {
-            const { data: schema } = await kbApi.getComponentSchema(llmCfg.name, 'chat_model');
-            setLlmSchema(schema);
-          } catch (err) {
-            setLlmSchema(null);
-            enqueueSnackbar(err.response?.data?.detail || 'Failed to load LLM schema', { variant: 'error' });
-          }
+        try {
+          const { data: schema } = await kbApi.getComponentSchema(llmCfg.name, 'chat_model');
+          setLlmSchema(schema);
+        } catch (err) {
+          setLlmSchema(null);
+          enqueueSnackbar(err.response?.data?.detail || 'Failed to load LLM schema', { variant: 'error' });
+        }
       } else {
         setLlmSchema(null);
       }
@@ -228,11 +241,14 @@ const AdminChat = () => {
       llm_config: settingsForm.llm_provider
         ? { name: settingsForm.llm_provider, build_config: typedConfig }
         : null,
-      chain_config: { chain_type: settingsForm.chain_type },
+      chain_config: {
+        chain_type: settingsForm.chain_type,
+        k: settingsForm.k,
+        last_k_message_pairs: settingsForm.last_k_message_pairs,
+      },
       prompt_config: settingsForm.prompt_template.trim()
         ? { template: settingsForm.prompt_template.trim() }
         : null,
-      memory_config: { memory_type: settingsForm.memory_type },
     };
 
     try {
@@ -308,6 +324,145 @@ const AdminChat = () => {
       await switchSession(data.session);
     } catch (err) {
       enqueueSnackbar(err.response?.data?.detail || 'Failed to create session', { variant: 'error' });
+    }
+  };
+
+  const handleCompare = async () => {
+    if (!selectedChatbot || !settingsForm.name.trim()) return;
+    setSavingSettings(true);
+    const typedConfig = {};
+    if (llmSchema?.inputs) {
+      llmSchema.inputs.forEach((field) => {
+        const raw = settingsForm.llm_config[field.name];
+        const value = (raw !== undefined && raw !== '') ? raw : field.default;
+        if (value !== undefined && value !== null) {
+          typedConfig[field.name] = castValue(value, field.type);
+        }
+      });
+    }
+    const payload = {
+      name: `[Compare] ${settingsForm.name.trim()}`,
+      description: settingsForm.description.trim() || null,
+      store_id: settingsForm.store_id || selectedChatbot.store_id || null,
+      llm_config: settingsForm.llm_provider
+        ? { name: settingsForm.llm_provider, build_config: typedConfig }
+        : null,
+      chain_config: {
+        chain_type: settingsForm.chain_type,
+        k: settingsForm.k,
+        last_k_message_pairs: settingsForm.last_k_message_pairs,
+      },
+      prompt_config: settingsForm.prompt_template.trim()
+        ? { template: settingsForm.prompt_template.trim() }
+        : null,
+    };
+    try {
+      if (compareBot) {
+        await chatbotApi.deleteChatbot(compareBot.id);
+      }
+      const { data } = await chatbotApi.createChatbot(payload);
+      const newBot = data.chatbot;
+      setCompareBot(newBot);
+      const { data: sessionData } = await chatApi.adminCreateSession(newBot.id);
+      setCompareSession(sessionData.session);
+      setCompareMessages([]);
+      setSavedFormSnapshot({ ...settingsForm });
+      setCompareMode(true);
+      setShowSettings(false);
+    } catch (err) {
+      enqueueSnackbar(err.response?.data?.detail || 'Failed to create comparison', { variant: 'error' });
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  const handleApplyCompare = async () => {
+    if (!selectedChatbot || !compareBot) return;
+    setSavingSettings(true);
+    try {
+      const typedConfig = {};
+      if (llmSchema?.inputs) {
+        llmSchema.inputs.forEach((field) => {
+          const raw = settingsForm.llm_config[field.name];
+          const value = (raw !== undefined && raw !== '') ? raw : field.default;
+          if (value !== undefined && value !== null) {
+            typedConfig[field.name] = castValue(value, field.type);
+          }
+        });
+      }
+      const payload = {
+        name: settingsForm.name.trim(),
+        description: settingsForm.description.trim() || null,
+        llm_config: settingsForm.llm_provider
+          ? { name: settingsForm.llm_provider, build_config: typedConfig }
+          : null,
+        chain_config: {
+          chain_type: settingsForm.chain_type,
+          k: settingsForm.k,
+          last_k_message_pairs: settingsForm.last_k_message_pairs,
+        },
+        prompt_config: settingsForm.prompt_template.trim()
+          ? { template: settingsForm.prompt_template.trim() }
+          : null,
+      };
+      const result = await dispatch(
+        updateChatbotThunk({ id: selectedChatbot.id, payload })
+      ).unwrap();
+      setSelectedChatbot(result);
+      await chatbotApi.deleteChatbot(compareBot.id);
+      setCompareMode(false);
+      setCompareBot(null);
+      setCompareSession(null);
+      setCompareMessages([]);
+      setShowSettings(false);
+      enqueueSnackbar('New settings applied', { variant: 'success' });
+      loadSessionsAndMessages(result);
+    } catch (err) {
+      enqueueSnackbar(err || 'Failed to apply settings', { variant: 'error' });
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  const handleDiscardCompare = async () => {
+    if (!compareBot) return;
+    try {
+      await chatbotApi.deleteChatbot(compareBot.id);
+    } catch { /* ignore */ }
+    setCompareMode(false);
+    setCompareBot(null);
+    setCompareSession(null);
+    setCompareMessages([]);
+    setShowSettings(false);
+  };
+
+  const handleCompareSend = async (message) => {
+    if (!compareBot || !compareSession) return;
+    setCompareSending(true);
+    const tempId = `temp_${Date.now()}`;
+    setCompareMessages((prev) => [
+      ...prev,
+      { id: tempId, role: 'human', content: message },
+    ]);
+    try {
+      const { data } = await chatApi.adminSendMessage(
+        compareBot.id,
+        compareSession.id,
+        message
+      );
+      setCompareMessages((prev) => [
+        ...prev.filter((m) => m.id !== tempId),
+        data.user_message,
+        data.ai_message,
+      ]);
+    } catch (err) {
+      setCompareMessages((prev) => prev.filter((m) => m.id !== tempId));
+      enqueueSnackbar(
+        err.response?.data?.detail || 'Compare bot failed',
+        { variant: 'error' }
+      );
+    } finally {
+      setCompareSending(false);
     }
   };
 
@@ -607,7 +762,7 @@ const AdminChat = () => {
               <Card sx={{ bgcolor: theme.palette.background.default, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
                 <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                   <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.text.secondary, display: 'block', mb: 1 }}>
-                    Chain & Memory
+                    Chain
                   </Typography>
                   <TextField
                     select
@@ -623,17 +778,24 @@ const AdminChat = () => {
                     ))}
                   </TextField>
                   <TextField
-                    select
-                    label="Memory Type"
+                    label="Top K (retrieved documents)"
                     fullWidth
                     size="small"
-                    value={settingsForm.memory_type}
-                    onChange={(e) => setSettingsForm((p) => ({ ...p, memory_type: e.target.value }))}
-                  >
-                    {MEMORY_TYPES.map((mt) => (
-                      <MenuItem key={mt.value} value={mt.value}>{mt.label}</MenuItem>
-                    ))}
-                  </TextField>
+                    type="number"
+                    value={settingsForm.k}
+                    onChange={(e) => setSettingsForm((p) => ({ ...p, k: parseInt(e.target.value, 10) || 0 }))}
+                    placeholder="4"
+                    sx={{ mb: 1 }}
+                  />
+                  <TextField
+                    label="Last K message pairs (chat history)"
+                    fullWidth
+                    size="small"
+                    type="number"
+                    value={settingsForm.last_k_message_pairs}
+                    onChange={(e) => setSettingsForm((p) => ({ ...p, last_k_message_pairs: parseInt(e.target.value, 10) || 0 }))}
+                    placeholder="3"
+                  />
                 </CardContent>
               </Card>
 
@@ -650,7 +812,6 @@ const AdminChat = () => {
                     size="small"
                     value={settingsForm.prompt_template}
                     onChange={(e) => setSettingsForm((p) => ({ ...p, prompt_template: e.target.value }))}
-                    placeholder="You are a helpful assistant. Use the context below to answer..."
                   />
                 </CardContent>
               </Card>

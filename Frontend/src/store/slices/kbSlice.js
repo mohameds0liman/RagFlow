@@ -73,6 +73,18 @@ export const uploadDocument = createAsyncThunk(
   }
 );
 
+export const addWebPage = createAsyncThunk(
+  'kb/addWebPage',
+  async ({ id, url, name }, { rejectWithValue }) => {
+    try {
+      const { data } = await kbApi.addWebPage(id, url, name);
+      return data.document;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.detail || 'Failed to add web page');
+    }
+  }
+);
+
 export const deleteDocument = createAsyncThunk(
   'kb/deleteDocument',
   async ({ id, docId }, { rejectWithValue }) => {

@@ -1,6 +1,7 @@
 from app.components.base import BaseComponent, InputParam
 from langchain_community.document_loaders import PyPDFLoader
 
+from langchain_community.document_loaders import WebBaseLoader
 
 class PDFLoaderComponent(BaseComponent):
     name = "PyPDFLoader"

@@ -4,7 +4,7 @@ export const createKnowledgeBase = (name, description) =>
   api.post('/admin/knowledge-bases', { knowledge_base_name: name, description });
 
 export const listKnowledgeBases = (status) =>
-  api.get('/admin/knowledge-bases', { params: status ? { status } : {} });
+  api.get('/admin/knowledge_bases', { params: status ? { status } : {} });
 
 export const updateKnowledgeBase = (id, payload) =>
   api.put(`/admin/knowledge_bases/${id}`, payload);
@@ -64,6 +64,9 @@ export const listComponents = (category) =>
 
 export const getComponentSchema = (name, category) =>
   api.get(`/admin/components/${name}/schema`, { params: { category } });
+
+export const addWebPage = (id, url, name) =>
+  api.post(`/admin/knowledge_bases/${id}/web_page`, { url, name });
 
 export const getDashboardStats = () =>
   api.get('/admin/dashboard/stats');

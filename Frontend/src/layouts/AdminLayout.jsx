@@ -67,24 +67,15 @@ const AdminLayout = () => {
   const content = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-        <Avatar
-          sx={{
-            bgcolor: theme.palette.primary.main,
-            width: 36,
-            height: 36,
-            borderRadius: 1.5,
-            fontWeight: 700,
-            fontSize: '1rem',
-          }}
-        >
-          R
-        </Avatar>
-        <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.text.primary, fontSize: '1.1rem' }}>
-          RAGFlow
-        </Typography>
+        <Box
+          component="img"
+          src="/logo.png"
+          alt="RAGFlow"
+          sx={{ width: 120, height: 'auto', flexShrink: 0 }}
+        />
       </Box>
       <Divider sx={{ borderColor: theme.palette.divider }} />
-      <List sx={{ flex: 1, px: 1.5, py: 1 }}>
+      <List sx={{ flex: 1, px: 3, py: 3 }}>
         {navItems.map((item) => {
           const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
           const Icon = item.icon;
@@ -97,8 +88,8 @@ const AdminLayout = () => {
               }}
               sx={{
                 borderRadius: 1.5,
-                mb: 0.5,
-                pl: 2,
+                mb: 1.75,
+                pl: 4,
                 borderLeft: isActive ? `4px solid ${theme.palette.primary.main}` : '4px solid transparent',
                 backgroundColor: isActive ? `${theme.palette.primary.main}1f` : 'transparent',
                 '&:hover': {
@@ -129,7 +120,7 @@ const AdminLayout = () => {
         })}
       </List>
       <Divider sx={{ borderColor: theme.palette.divider }} />
-      <List sx={{ px: 1.5, py: 1 }}>
+      <List sx={{ px: 2, py: 1.25 }}>
         {bottomNavItems.map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
@@ -143,7 +134,7 @@ const AdminLayout = () => {
               sx={{
                 borderRadius: 1.5,
                 mb: 0.5,
-                pl: 2,
+                pl: 3,
                 borderLeft: isActive ? `4px solid ${theme.palette.primary.main}` : '4px solid transparent',
                 backgroundColor: isActive ? `${theme.palette.primary.main}1f` : 'transparent',
                 '&:hover': {

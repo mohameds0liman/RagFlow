@@ -19,14 +19,11 @@ import {
 } from '@mui/material';
 import { IconX } from '@tabler/icons-react';
 import { useDispatch, useSelector } from 'react-redux';
+import ComponentIcon from '../../../components/ComponentIcon';
 import * as kbApi from '../../../api/knowledgeBaseApi';
 import { createChatbot, updateChatbot } from '../../../store/slices/chatbotSlice';
 
-const CHAIN_TYPES = ['ConversationalRetrievalChain'];
-const MEMORY_TYPES = [
-  { value: 'buffer', label: 'Buffer Memory' },
-  { value: 'summary', label: 'Summary Memory' },
-];
+const CHAIN_TYPES = ['stuff', 'map_reduce', 'refine', 'map_rerank'];
 
 const NUMERIC_TYPES = ['float', 'integer', 'number'];
 
@@ -37,6 +34,14 @@ const castValue = (value, type) => {
   }
   return value;
 };
+
+const DEFAULT_PROMPT_TEMPLATE = `Use the following pieces of context to answer the question at the end.
+If you don't know the answer, just say that you don't know.
+{context}
+Chat History:
+{chat_history}
+Question: {question}
+Helpful Answer:`;
 
 const ChatbotSettingsDialog = ({ open, onClose, existingBot }) => {
   const theme = useTheme();
@@ -55,8 +60,9 @@ const ChatbotSettingsDialog = ({ open, onClose, existingBot }) => {
     store_id: '',
     llm_provider: '',
     llm_config: {},
-    chain_type: 'ConversationalRetrievalChain',
-    memory_type: 'buffer',
+    chain_type: 'stuff',
+    k: 4,
+    last_k_message_pairs: 3,
     prompt_template: '',
   });
 
@@ -65,15 +71,14 @@ const ChatbotSettingsDialog = ({ open, onClose, existingBot }) => {
     const init = async () => {
       setLoading(true);
       try {
-        const { data } = await kbApi.listComponents('chat_model');
-        const comps = Object.entries(data || {}).map(([name, inputs]) => ({ name, inputs }));
+        const { data: llmData } = await kbApi.listComponents('chat_model');
+        const comps = Object.entries(llmData || {}).map(([name, inputs]) => ({ name, inputs }));
         setLlmComponents(comps);
 
         if (existingBot) {
           const llmCfg = existingBot.llm_config || {};
           const chainCfg = existingBot.chain_config || {};
           const promptCfg = existingBot.prompt_config || {};
-          const memoryCfg = existingBot.memory_config || {};
 
           setForm({
             name: existingBot.name || '',
@@ -81,9 +86,10 @@ const ChatbotSettingsDialog = ({ open, onClose, existingBot }) => {
             store_id: existingBot.store_id || '',
             llm_provider: llmCfg.name || '',
             llm_config: llmCfg.build_config || {},
-            chain_type: chainCfg.chain_type || 'ConversationalRetrievalChain',
-            memory_type: memoryCfg.memory_type || 'buffer',
-            prompt_template: promptCfg.template || '',
+            chain_type: chainCfg.chain_type || 'stuff',
+            k: chainCfg.k ?? 4,
+            last_k_message_pairs: chainCfg.last_k_message_pairs ?? 3,
+            prompt_template: promptCfg.template || DEFAULT_PROMPT_TEMPLATE,
           });
 
           if (llmCfg.name) {
@@ -99,14 +105,15 @@ const ChatbotSettingsDialog = ({ open, onClose, existingBot }) => {
             store_id: '',
             llm_provider: '',
             llm_config: {},
-            chain_type: 'ConversationalRetrievalChain',
-            memory_type: 'buffer',
-            prompt_template: '',
+            chain_type: 'stuff',
+            k: 4,
+            last_k_message_pairs: 3,
+            prompt_template: DEFAULT_PROMPT_TEMPLATE,
           });
           setLlmSchema(null);
         }
       } catch (err) {
-        enqueueSnackbar(err.response?.data?.detail || 'Failed to load LLM components', { variant: 'error' });
+        enqueueSnackbar(err.response?.data?.detail || 'Failed to load components', { variant: 'error' });
       } finally {
         setLoading(false);
       }
@@ -136,6 +143,61 @@ const ChatbotSettingsDialog = ({ open, onClose, existingBot }) => {
     }));
   };
 
+  const renderSchemaFields = (schema, config, onChange) => {
+    if (!schema?.inputs) return null;
+    return schema.inputs.map((field) => {
+      if (field.enum) {
+        return (
+          <TextField
+            key={field.name}
+            select
+            label={field.description || field.label || field.name}
+            fullWidth
+            size="small"
+            value={config[field.name] ?? field.default ?? ''}
+            onChange={(e) => onChange(field.name, e.target.value)}
+            placeholder={field.default ? String(field.default) : ''}
+            sx={{ mb: 1.5 }}
+          >
+            {field.enum.map((opt) => (
+              <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+            ))}
+          </TextField>
+        );
+      }
+      if (field.type === 'bool') {
+        return (
+          <TextField
+            key={field.name}
+            select
+            label={field.description || field.label || field.name}
+            fullWidth
+            size="small"
+            value={config[field.name] !== undefined ? String(config[field.name]) : String(field.default ?? true)}
+            onChange={(e) => onChange(field.name, e.target.value === 'true')}
+            sx={{ mb: 1.5 }}
+          >
+            <MenuItem value="true">true</MenuItem>
+            <MenuItem value="false">false</MenuItem>
+          </TextField>
+        );
+      }
+      return (
+        <TextField
+          key={field.name}
+          label={field.description || field.label || field.name}
+          fullWidth
+          size="small"
+          type={NUMERIC_TYPES.includes(field.type) ? 'number' : 'text'}
+          value={config[field.name] ?? ''}
+          onChange={(e) => onChange(field.name, e.target.value)}
+          placeholder={field.default ? String(field.default) : ''}
+          sx={{ mb: 1.5 }}
+        />
+      );
+    });
+  };
+
   const handleSave = async () => {
     if (!form.name.trim()) {
       enqueueSnackbar('Name is required', { variant: 'error' });
@@ -160,11 +222,14 @@ const ChatbotSettingsDialog = ({ open, onClose, existingBot }) => {
       llm_config: form.llm_provider
         ? { name: form.llm_provider, build_config: typedConfig }
         : null,
-      chain_config: { chain_type: form.chain_type },
+      chain_config: {
+        chain_type: form.chain_type,
+        k: form.k,
+        last_k_message_pairs: form.last_k_message_pairs,
+      },
       prompt_config: form.prompt_template.trim()
         ? { template: form.prompt_template.trim() }
         : null,
-      memory_config: { memory_type: form.memory_type },
     };
 
     try {
@@ -179,23 +244,6 @@ const ChatbotSettingsDialog = ({ open, onClose, existingBot }) => {
     } catch (err) {
       enqueueSnackbar(err, { variant: 'error' });
     }
-  };
-
-  const renderLlmFields = () => {
-    if (!llmSchema?.inputs) return null;
-    return llmSchema.inputs.map((field) => (
-      <TextField
-        key={field.name}
-        label={field.description || field.name}
-        fullWidth
-        size="small"
-        type={NUMERIC_TYPES.includes(field.type) ? 'number' : 'text'}
-        value={form.llm_config[field.name] ?? ''}
-        onChange={(e) => handleLlmFieldChange(field.name, e.target.value)}
-        placeholder={field.default ? String(field.default) : ''}
-        sx={{ mb: 1.5 }}
-      />
-    ));
   };
 
   return (
@@ -278,10 +326,15 @@ const ChatbotSettingsDialog = ({ open, onClose, existingBot }) => {
                 >
                   <MenuItem value="">None</MenuItem>
                   {llmComponents.map((comp) => (
-                    <MenuItem key={comp.name} value={comp.name}>{comp.name}</MenuItem>
+                    <MenuItem key={comp.name} value={comp.name}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <ComponentIcon category="chat_model" name={comp.name} size={18} />
+                        {comp.name}
+                      </Box>
+                    </MenuItem>
                   ))}
                 </TextField>
-                {renderLlmFields()}
+                {renderSchemaFields(llmSchema, form.llm_config, handleLlmFieldChange)}
                 {llmSchema && form.llm_provider && llmSchema?.inputs?.length === 0 && (
                   <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontStyle: 'italic' }}>
                     No configuration fields required.
@@ -293,7 +346,7 @@ const ChatbotSettingsDialog = ({ open, onClose, existingBot }) => {
             <Card sx={{ backgroundColor: theme.palette.background.paper, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
               <CardContent>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, color: theme.palette.text.primary }}>
-                  Chain & Memory
+                  Chain
                 </Typography>
                 <TextField
                   select
@@ -305,21 +358,30 @@ const ChatbotSettingsDialog = ({ open, onClose, existingBot }) => {
                   sx={{ mb: 1.5 }}
                 >
                   {CHAIN_TYPES.map((ct) => (
-                    <MenuItem key={ct} value={ct}>{ct}</MenuItem>
+                    <MenuItem key={ct} value={ct}>
+                      {ct}
+                    </MenuItem>
                   ))}
                 </TextField>
                 <TextField
-                  select
-                  label="Memory Type"
+                  label="Top K (retrieved documents)"
                   fullWidth
                   size="small"
-                  value={form.memory_type}
-                  onChange={(e) => setForm((p) => ({ ...p, memory_type: e.target.value }))}
-                >
-                  {MEMORY_TYPES.map((mt) => (
-                    <MenuItem key={mt.value} value={mt.value}>{mt.label}</MenuItem>
-                  ))}
-                </TextField>
+                  type="number"
+                  value={form.k}
+                  onChange={(e) => setForm((p) => ({ ...p, k: parseInt(e.target.value, 10) || 0 }))}
+                  placeholder="4"
+                  sx={{ mb: 1.5 }}
+                />
+                <TextField
+                  label="Last K message pairs (chat history)"
+                  fullWidth
+                  size="small"
+                  type="number"
+                  value={form.last_k_message_pairs}
+                  onChange={(e) => setForm((p) => ({ ...p, last_k_message_pairs: parseInt(e.target.value, 10) || 0 }))}
+                  placeholder="3"
+                />
               </CardContent>
             </Card>
 
@@ -336,7 +398,6 @@ const ChatbotSettingsDialog = ({ open, onClose, existingBot }) => {
                   size="small"
                   value={form.prompt_template}
                   onChange={(e) => setForm((p) => ({ ...p, prompt_template: e.target.value }))}
-                  placeholder="You are a helpful assistant. Use the context below to answer..."
                 />
               </CardContent>
             </Card>

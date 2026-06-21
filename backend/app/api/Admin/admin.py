@@ -1,5 +1,5 @@
 from fastapi import (
-    APIRouter ,UploadFile ,File ,
+    APIRouter ,UploadFile ,File ,Form,
     HTTPException ,
     Query , Depends ,Body
     )
@@ -245,7 +245,7 @@ def create_knowledge_base(
     db.refresh(store)
     return {"status": "created", "knowledge_base": to_dict(store)}
 
-@router.get("/knowledge-bases")
+@router.get("/knowledge_bases")
 def get_knowledge_bases(
     status: str | None = Query(default=None), # used for filtter
     db: Session = Depends(get_db),
@@ -445,6 +445,7 @@ def trigger_upsert(
 def upload_document(
     knowledge_base_id: str,
     file: UploadFile = File(...),
+    url: str = Form(None),
     admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
@@ -467,6 +468,31 @@ def upload_document(
     db.commit()
     db.refresh(doc)
     return {"status": "uploaded", "document": to_dict(doc)}
+
+@router.post("/knowledge_bases/{knowledge_base_id}/web_page")
+def add_web_page(
+    knowledge_base_id: str,
+    url: str = Body(...),
+    name: str = Body(None),         # optional name
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    store = _validate_store(db=db, knowledge_base_id=knowledge_base_id)
+
+    doc = UploadedDocument(
+        store_id=store.id,
+        file_name=name or url,
+        file_path=url,
+        file_type="url",
+        file_size_mb=0,
+        status=UploadedDocumentStatus.uploaded,
+    )
+    db.add(doc)
+    db.commit()
+    db.refresh(doc)
+    return {"status": "uploaded", "document": to_dict(doc)}
+
+
 
 @router.get("/knowledge_bases/{knowledge_base_id}/documents")
 def list_uploaded_documents(knowledge_base_id: str, db: Session = Depends(get_db)):
@@ -539,7 +565,10 @@ def ingest_document(
     )
     db.add(splitter)
     db.flush()
-    loader_build_config = {**request.loader_config, "file_path": uploaded.file_path}
+    if uploaded.file_type =="url":
+        loader_build_config={**request.loader_config , "web_path":uploaded.file_path}
+    else:
+        loader_build_config = {**request.loader_config, "file_path": uploaded.file_path}
     chunks = factory.build_loader_pipeline({
         "loader":  {"name": request.loader_name,  "build_config": loader_build_config},
         "chunker": {"name": request.chunker_name, "build_config": request.chunker_config},

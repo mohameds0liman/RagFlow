@@ -179,7 +179,7 @@ def send_message(
     (prev[i].content, prev[i + 1].content)
     for i in range(0, len(prev) - 1, 2)
     if prev[i].role == MessageRole.human and prev[i + 1].role == MessageRole.ai
-    ][-3:]   # last 3 pairs ≈ last 6 messages; use [-2:] for ~5 messages
+    ][-chatbot.chain_config.get("last_k_message_pairs", 3):]   # last 3 pairs ≈ last 6 messages; use [-2:] for ~5 messages
     # 3. Build and invoke chain
     import time
     start = time.time()
