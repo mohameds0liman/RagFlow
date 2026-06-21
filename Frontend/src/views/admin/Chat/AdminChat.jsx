@@ -26,6 +26,7 @@ import {
   IconSettings,
   IconX,
   IconMessage,
+  IconSend,
 } from '@tabler/icons-react';
 import ChatWindow from '../../../components/ChatWindow';
 import ConfirmDialog from '../../../components/ConfirmDialog';
@@ -79,6 +80,7 @@ const AdminChat = () => {
   const [compareMessages, setCompareMessages] = useState([]);
   const [compareSending, setCompareSending] = useState(false);
   const [savedFormSnapshot, setSavedFormSnapshot] = useState(null);
+  const [sharedInput, setSharedInput] = useState('');
 
   const [llmComponents, setLlmComponents] = useState([]);
   const [llmSchema, setLlmSchema] = useState(null);
@@ -466,6 +468,49 @@ const AdminChat = () => {
     }
   };
 
+  const handleSharedSend = async () => {
+    const msg = sharedInput.trim();
+    if (!msg || !activeSession || !selectedChatbot || (!compareBot || !compareSession)) return;
+    setSharedInput('');
+    // Send to original
+    setSending(true);
+    setCompareSending(true);
+    const tempOrig = `orig_${Date.now()}`;
+    const tempComp = `comp_${Date.now()}`;
+    setMessages((prev) => [...prev, { id: tempOrig, role: 'human', content: msg }]);
+    setCompareMessages((prev) => [...prev, { id: tempComp, role: 'human', content: msg }]);
+    try {
+      const [origRes, compRes] = await Promise.all([
+        chatApi.adminSendMessage(selectedChatbot.id, activeSession.id, msg),
+        compareBot && compareSession
+          ? chatApi.adminSendMessage(compareBot.id, compareSession.id, msg)
+          : Promise.resolve(null),
+      ]);
+      setMessages((prev) => [
+        ...prev.filter((m) => m.id !== tempOrig),
+        origRes.data.user_message,
+        origRes.data.ai_message,
+      ]);
+      if (compRes) {
+        setCompareMessages((prev) => [
+          ...prev.filter((m) => m.id !== tempComp),
+          compRes.data.user_message,
+          compRes.data.ai_message,
+        ]);
+      }
+    } catch (err) {
+      setMessages((prev) => prev.filter((m) => m.id !== tempOrig));
+      setCompareMessages((prev) => prev.filter((m) => m.id !== tempComp));
+      enqueueSnackbar(
+        err.response?.data?.detail || 'Failed to send to one or both bots',
+        { variant: 'error' }
+      );
+    } finally {
+      setSending(false);
+      setCompareSending(false);
+    }
+  };
+
   const renderLlmFields = () => {
     if (!llmSchema?.inputs) return null;
     return llmSchema.inputs.map((field) => (
@@ -600,234 +645,228 @@ const AdminChat = () => {
         </Box>
       </Box>
 
-      {/* Center - Chat area */}
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        {selectedChatbot ? (
-          <>
-            <Box
-              sx={{
-                p: 1.5,
-                borderBottom: `1px solid ${theme.palette.divider}`,
-                bgcolor: theme.palette.background.paper,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-              }}
-            >
-              <Avatar sx={{ width: 28, height: 28, bgcolor: theme.palette.primary.main }}>
-                <IconRobot size={16} />
-              </Avatar>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                {selectedChatbot.name}
+{compareMode && compareBot ? (
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <Box sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: theme.palette.background.paper, display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Compare Mode</Typography>
+              <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                Original vs new settings
               </Typography>
             </Box>
-            <Box sx={{ flex: 1, overflow: 'hidden' }}>
-              <ChatWindow messages={messages} onSend={handleSend} loading={sending} />
-            </Box>
-          </>
-        ) : (
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-            <Box sx={{ textAlign: 'center', color: theme.palette.text.secondary }}>
-              <IconRobot size={64} stroke={1.5} />
-              <Typography variant="h6" sx={{ mt: 2, color: theme.palette.text.primary }}>
-                RAGFlow Chat
-              </Typography>
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                Select a chatbot from the left panel to start chatting
-              </Typography>
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
+              <IconButton size="small" onClick={() => setShowSettings((prev) => !prev)} color={showSettings ? 'primary' : 'default'} title="Settings">
+                <IconSettings size={18} />
+              </IconButton>
+              <Button size="small" variant="outlined" color="error" onClick={handleDiscardCompare} disabled={savingSettings}>
+                Discard
+              </Button>
+              <Button size="small" variant="contained" onClick={handleApplyCompare} disabled={savingSettings}>
+                {savingSettings ? <CircularProgress size={16} /> : 'Apply'}
+              </Button>
             </Box>
           </Box>
-        )}
-      </Box>
-
-      {/* Right - Settings panel */}
-      {showSettings && selectedChatbot && (
-        <Box
-          sx={{
-            width: 380,
-            borderLeft: `1px solid ${theme.palette.divider}`,
-            bgcolor: theme.palette.background.paper,
-            overflow: 'auto',
-            flexShrink: 0,
-          }}
-        >
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              p: 1.5,
-              borderBottom: `1px solid ${theme.palette.divider}`,
-            }}
-          >
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-              Chatbot Settings
-            </Typography>
-            <IconButton size="small" onClick={() => setShowSettings(false)}>
-              <IconX size={18} />
-            </IconButton>
-          </Box>
-
-          {settingsLoading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress />
+          <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', borderRight: `1px solid ${theme.palette.divider}` }}>
+              <Box sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: theme.palette.background.default, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Avatar sx={{ width: 24, height: 24, bgcolor: theme.palette.primary.main }}><IconRobot size={14} /></Avatar>
+                <Typography variant="caption" sx={{ fontWeight: 600 }}>{selectedChatbot?.name} (Original)</Typography>
+              </Box>
+              <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                <ChatWindow messages={messages} onSend={handleSend} loading={sending} hideInput chatbotName={`${selectedChatbot?.name} (Original)`} />
+              </Box>
             </Box>
-          ) : (
-            <Box sx={{ p: 1.5, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              <Button
-                variant="contained"
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <Box sx={{ p: 1, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: theme.palette.background.default, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Avatar sx={{ width: 24, height: 24, bgcolor: theme.palette.secondary.main }}><IconRobot size={14} /></Avatar>
+                <Typography variant="caption" sx={{ fontWeight: 600 }}>{settingsForm.name} (New)</Typography>
+              </Box>
+              <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                <ChatWindow messages={compareMessages} onSend={handleCompareSend} loading={compareSending} hideInput chatbotName={`${settingsForm.name} (New)`} chatbotColor="#7c4dff" />
+              </Box>
+            </Box>
+          </Box>
+          <Box sx={{ px: 2, py: 1.25, borderTop: `1px solid ${theme.palette.divider}`, bgcolor: theme.palette.background.paper }}>
+            <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, bgcolor: theme.palette.background.default, borderRadius: '16px', p: 0.5, pl: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.25)' }}>
+              <TextField
                 fullWidth
-                onClick={handleUpdateSettings}
-                disabled={savingSettings || !settingsForm.name.trim()}
-              >
-                {savingSettings ? <CircularProgress size={20} sx={{ mr: 1 }} /> : null}
-                Update Settings
-              </Button>
-
-              <Card sx={{ bgcolor: theme.palette.background.default, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
-                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                  <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.text.secondary, display: 'block', mb: 1 }}>
-                    Basic Info
-                  </Typography>
-                  <TextField
-                    label="Name"
-                    fullWidth
-                    required
-                    size="small"
-                    value={settingsForm.name}
-                    onChange={(e) => setSettingsForm((p) => ({ ...p, name: e.target.value }))}
-                    sx={{ mb: 1 }}
-                  />
-                  <TextField
-                    label="Description"
-                    fullWidth
-                    multiline
-                    rows={2}
-                    size="small"
-                    value={settingsForm.description}
-                    onChange={(e) => setSettingsForm((p) => ({ ...p, description: e.target.value }))}
-                  />
-                </CardContent>
-              </Card>
-
-              <Card sx={{ bgcolor: theme.palette.background.default, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
-                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                  <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.text.secondary, display: 'block', mb: 1 }}>
-                    Knowledge Base
-                  </Typography>
-                  <TextField
-                    select
-                    label="Knowledge Base"
-                    fullWidth
-                    size="small"
-                    value={settingsForm.store_id}
-                    onChange={(e) => setSettingsForm((p) => ({ ...p, store_id: e.target.value }))}
-                  >
-                    <MenuItem value="">None</MenuItem>
-                    {kbList.map((kb) => (
-                      <MenuItem key={kb.id} value={kb.id}>{kb.name}</MenuItem>
-                    ))}
-                  </TextField>
-                </CardContent>
-              </Card>
-
-              <Card sx={{ bgcolor: theme.palette.background.default, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
-                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                  <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.text.secondary, display: 'block', mb: 1 }}>
-                    LLM Configuration
-                  </Typography>
-                  <TextField
-                    select
-                    label="LLM Provider"
-                    fullWidth
-                    size="small"
-                    value={settingsForm.llm_provider}
-                    onChange={(e) => handleLlmProviderChange(e.target.value)}
-                    sx={{ mb: 1 }}
-                  >
-                    <MenuItem value="">None</MenuItem>
-                    {llmComponents.map((comp) => (
-                      <MenuItem key={comp.name} value={comp.name}>{comp.name}</MenuItem>
-                    ))}
-                  </TextField>
-                  {renderLlmFields()}
-                  {llmSchema && settingsForm.llm_provider && llmSchema?.inputs?.length === 0 && (
-                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontStyle: 'italic' }}>
-                      No configuration fields required.
-                    </Typography>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card sx={{ bgcolor: theme.palette.background.default, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
-                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                  <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.text.secondary, display: 'block', mb: 1 }}>
-                    Chain
-                  </Typography>
-                  <TextField
-                    select
-                    label="Chain Type"
-                    fullWidth
-                    size="small"
-                    value={settingsForm.chain_type}
-                    onChange={(e) => setSettingsForm((p) => ({ ...p, chain_type: e.target.value }))}
-                    sx={{ mb: 1 }}
-                  >
-                    {CHAIN_TYPES.map((ct) => (
-                      <MenuItem key={ct} value={ct}>{ct}</MenuItem>
-                    ))}
-                  </TextField>
-                  <TextField
-                    label="Top K (retrieved documents)"
-                    fullWidth
-                    size="small"
-                    type="number"
-                    value={settingsForm.k}
-                    onChange={(e) => setSettingsForm((p) => ({ ...p, k: parseInt(e.target.value, 10) || 0 }))}
-                    placeholder="4"
-                    sx={{ mb: 1 }}
-                  />
-                  <TextField
-                    label="Last K message pairs (chat history)"
-                    fullWidth
-                    size="small"
-                    type="number"
-                    value={settingsForm.last_k_message_pairs}
-                    onChange={(e) => setSettingsForm((p) => ({ ...p, last_k_message_pairs: parseInt(e.target.value, 10) || 0 }))}
-                    placeholder="3"
-                  />
-                </CardContent>
-              </Card>
-
-              <Card sx={{ bgcolor: theme.palette.background.default, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
-                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                  <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.text.secondary, display: 'block', mb: 1 }}>
-                    Instructions / Prompt Template
-                  </Typography>
-                  <TextField
-                    label="Prompt Template"
-                    fullWidth
-                    multiline
-                    rows={6}
-                    size="small"
-                    value={settingsForm.prompt_template}
-                    onChange={(e) => setSettingsForm((p) => ({ ...p, prompt_template: e.target.value }))}
-                  />
-                </CardContent>
-              </Card>
-
-              <Button
-                variant="contained"
-                fullWidth
-                onClick={handleUpdateSettings}
-                disabled={savingSettings || !settingsForm.name.trim()}
-              >
-                {savingSettings ? <CircularProgress size={20} sx={{ mr: 1 }} /> : null}
-                Update Settings
-              </Button>
+                multiline
+                minRows={1}
+                maxRows={3}
+                placeholder="Type a message to compare both bots..."
+                value={sharedInput}
+                onChange={(e) => setSharedInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSharedSend(); } }}
+                variant="standard"
+                InputProps={{ disableUnderline: true }}
+                sx={{ '& .MuiInputBase-root': { fontSize: '0.875rem', py: 1.125, lineHeight: 1.3 } }}
+              />
+              <IconButton onClick={handleSharedSend} disabled={!sharedInput.trim() || sending || compareSending} sx={{ color: theme.palette.primary.main, borderRadius: '12px', width: 36, height: 36 }}>
+                {(sending || compareSending) ? <CircularProgress size={18} /> : <IconSend size={18} />}
+              </IconButton>
+            </Box>
+          </Box>
+          {showSettings && (
+            <Box sx={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 380, borderLeft: `1px solid ${theme.palette.divider}`, bgcolor: theme.palette.background.paper, overflow: 'auto', zIndex: 10, boxShadow: '-4px 0 20px rgba(0,0,0,0.15)' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Chatbot Settings</Typography>
+                <IconButton size="small" onClick={() => setShowSettings(false)}><IconX size={18} /></IconButton>
+              </Box>
+              {settingsLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress /></Box>
+              ) : (
+                <Box sx={{ p: 1.5, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button variant="contained" fullWidth onClick={handleCompare} disabled={savingSettings || !settingsForm.name.trim()}>
+                      {savingSettings ? <CircularProgress size={16} /> : 'Compare'}
+                    </Button>
+                  </Box>
+                  <Card sx={{ bgcolor: theme.palette.background.default, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
+                    <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.text.secondary, display: 'block', mb: 1 }}>Basic Info</Typography>
+                      <TextField label="Name" fullWidth required size="small" value={settingsForm.name} onChange={(e) => setSettingsForm((p) => ({ ...p, name: e.target.value }))} sx={{ mb: 1 }} />
+                      <TextField label="Description" fullWidth multiline rows={2} size="small" value={settingsForm.description} onChange={(e) => setSettingsForm((p) => ({ ...p, description: e.target.value }))} />
+                    </CardContent>
+                  </Card>
+                  <Card sx={{ bgcolor: theme.palette.background.default, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
+                    <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.text.secondary, display: 'block', mb: 1 }}>Knowledge Base</Typography>
+                      <TextField select label="Knowledge Base" fullWidth size="small" value={settingsForm.store_id} onChange={(e) => setSettingsForm((p) => ({ ...p, store_id: e.target.value }))}>
+                        <MenuItem value="">None</MenuItem>
+                        {kbList.map((kb) => (<MenuItem key={kb.id} value={kb.id}>{kb.name}</MenuItem>))}
+                      </TextField>
+                    </CardContent>
+                  </Card>
+                  <Card sx={{ bgcolor: theme.palette.background.default, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
+                    <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.text.secondary, display: 'block', mb: 1 }}>LLM Configuration</Typography>
+                      <TextField select label="LLM Provider" fullWidth size="small" value={settingsForm.llm_provider} onChange={(e) => handleLlmProviderChange(e.target.value)} sx={{ mb: 1 }}>
+                        <MenuItem value="">None</MenuItem>
+                        {llmComponents.map((comp) => (<MenuItem key={comp.name} value={comp.name}>{comp.name}</MenuItem>))}
+                      </TextField>
+                      {renderLlmFields()}
+                    </CardContent>
+                  </Card>
+                  <Card sx={{ bgcolor: theme.palette.background.default, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
+                    <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.text.secondary, display: 'block', mb: 1 }}>Chain</Typography>
+                      <TextField select label="Chain Type" fullWidth size="small" value={settingsForm.chain_type} onChange={(e) => setSettingsForm((p) => ({ ...p, chain_type: e.target.value }))} sx={{ mb: 1 }}>
+                        {CHAIN_TYPES.map((ct) => (<MenuItem key={ct} value={ct}>{ct}</MenuItem>))}
+                      </TextField>
+                      <TextField label="Top K (retrieved documents)" fullWidth size="small" type="number" value={settingsForm.k} onChange={(e) => setSettingsForm((p) => ({ ...p, k: parseInt(e.target.value, 10) || 0 }))} placeholder="4" sx={{ mb: 1 }} />
+                      <TextField label="Last K message pairs (chat history)" fullWidth size="small" type="number" value={settingsForm.last_k_message_pairs} onChange={(e) => setSettingsForm((p) => ({ ...p, last_k_message_pairs: parseInt(e.target.value, 10) || 0 }))} placeholder="3" />
+                    </CardContent>
+                  </Card>
+                  <Card sx={{ bgcolor: theme.palette.background.default, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
+                    <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.text.secondary, display: 'block', mb: 1 }}>Instructions / Prompt Template</Typography>
+                      <TextField label="Prompt Template" fullWidth multiline rows={6} size="small" value={settingsForm.prompt_template} onChange={(e) => setSettingsForm((p) => ({ ...p, prompt_template: e.target.value }))} />
+                    </CardContent>
+                  </Card>
+                  <Button variant="contained" fullWidth onClick={handleCompare} disabled={savingSettings || !settingsForm.name.trim()}>
+                    {savingSettings ? <CircularProgress size={16} /> : 'Compare'}
+                  </Button>
+                </Box>
+              )}
             </Box>
           )}
         </Box>
+      ) : (
+        <>
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            {selectedChatbot ? (
+              <>
+                <Box sx={{ p: 1.5, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: theme.palette.background.paper, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Avatar sx={{ width: 28, height: 28, bgcolor: theme.palette.primary.main }}><IconRobot size={16} /></Avatar>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>{selectedChatbot.name}</Typography>
+                </Box>
+                <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                  <ChatWindow messages={messages} onSend={handleSend} loading={sending} />
+                </Box>
+              </>
+            ) : (
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                <Box sx={{ textAlign: 'center', color: theme.palette.text.secondary }}>
+                  <IconRobot size={64} stroke={1.5} />
+                  <Typography variant="h6" sx={{ mt: 2, color: theme.palette.text.primary }}>RAGFlow Chat</Typography>
+                  <Typography variant="body2" sx={{ mt: 1 }}>Select a chatbot from the left panel to start chatting</Typography>
+                </Box>
+              </Box>
+            )}
+          </Box>
+          {showSettings && selectedChatbot && (
+            <Box sx={{ width: 380, borderLeft: `1px solid ${theme.palette.divider}`, bgcolor: theme.palette.background.paper, overflow: 'auto', flexShrink: 0 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Chatbot Settings</Typography>
+                <IconButton size="small" onClick={() => setShowSettings(false)}><IconX size={18} /></IconButton>
+              </Box>
+              {settingsLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress /></Box>
+              ) : (
+                <Box sx={{ p: 1.5, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button variant="contained" fullWidth onClick={handleUpdateSettings} disabled={savingSettings || !settingsForm.name.trim()}>
+                      {savingSettings ? <CircularProgress size={16} /> : 'Update'}
+                    </Button>
+                    <Button variant="outlined" fullWidth onClick={handleCompare} disabled={savingSettings || !settingsForm.name.trim()}>
+                      Compare
+                    </Button>
+                  </Box>
+                  <Card sx={{ bgcolor: theme.palette.background.default, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
+                    <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.text.secondary, display: 'block', mb: 1 }}>Basic Info</Typography>
+                      <TextField label="Name" fullWidth required size="small" value={settingsForm.name} onChange={(e) => setSettingsForm((p) => ({ ...p, name: e.target.value }))} sx={{ mb: 1 }} />
+                      <TextField label="Description" fullWidth multiline rows={2} size="small" value={settingsForm.description} onChange={(e) => setSettingsForm((p) => ({ ...p, description: e.target.value }))} />
+                    </CardContent>
+                  </Card>
+                  <Card sx={{ bgcolor: theme.palette.background.default, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
+                    <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.text.secondary, display: 'block', mb: 1 }}>Knowledge Base</Typography>
+                      <TextField select label="Knowledge Base" fullWidth size="small" value={settingsForm.store_id} onChange={(e) => setSettingsForm((p) => ({ ...p, store_id: e.target.value }))}>
+                        <MenuItem value="">None</MenuItem>
+                        {kbList.map((kb) => (<MenuItem key={kb.id} value={kb.id}>{kb.name}</MenuItem>))}
+                      </TextField>
+                    </CardContent>
+                  </Card>
+                  <Card sx={{ bgcolor: theme.palette.background.default, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
+                    <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.text.secondary, display: 'block', mb: 1 }}>LLM Configuration</Typography>
+                      <TextField select label="LLM Provider" fullWidth size="small" value={settingsForm.llm_provider} onChange={(e) => handleLlmProviderChange(e.target.value)} sx={{ mb: 1 }}>
+                        <MenuItem value="">None</MenuItem>
+                        {llmComponents.map((comp) => (<MenuItem key={comp.name} value={comp.name}>{comp.name}</MenuItem>))}
+                      </TextField>
+                      {renderLlmFields()}
+                    </CardContent>
+                  </Card>
+                  <Card sx={{ bgcolor: theme.palette.background.default, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
+                    <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.text.secondary, display: 'block', mb: 1 }}>Chain</Typography>
+                      <TextField select label="Chain Type" fullWidth size="small" value={settingsForm.chain_type} onChange={(e) => setSettingsForm((p) => ({ ...p, chain_type: e.target.value }))} sx={{ mb: 1 }}>
+                        {CHAIN_TYPES.map((ct) => (<MenuItem key={ct} value={ct}>{ct}</MenuItem>))}
+                      </TextField>
+                      <TextField label="Top K (retrieved documents)" fullWidth size="small" type="number" value={settingsForm.k} onChange={(e) => setSettingsForm((p) => ({ ...p, k: parseInt(e.target.value, 10) || 0 }))} placeholder="4" sx={{ mb: 1 }} />
+                      <TextField label="Last K message pairs (chat history)" fullWidth size="small" type="number" value={settingsForm.last_k_message_pairs} onChange={(e) => setSettingsForm((p) => ({ ...p, last_k_message_pairs: parseInt(e.target.value, 10) || 0 }))} placeholder="3" />
+                    </CardContent>
+                  </Card>
+                  <Card sx={{ bgcolor: theme.palette.background.default, border: `1px solid ${theme.palette.divider}`, borderRadius: '12px' }}>
+                    <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.text.secondary, display: 'block', mb: 1 }}>Instructions / Prompt Template</Typography>
+                      <TextField label="Prompt Template" fullWidth multiline rows={6} size="small" value={settingsForm.prompt_template} onChange={(e) => setSettingsForm((p) => ({ ...p, prompt_template: e.target.value }))} />
+                    </CardContent>
+                  </Card>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button variant="contained" fullWidth onClick={handleUpdateSettings} disabled={savingSettings || !settingsForm.name.trim()}>
+                      {savingSettings ? <CircularProgress size={16} /> : 'Update'}
+                    </Button>
+                    <Button variant="outlined" fullWidth onClick={handleCompare} disabled={savingSettings || !settingsForm.name.trim()}>
+                      Compare
+                    </Button>
+                  </Box>
+                </Box>
+              )}
+            </Box>
+          )}
+        </>
       )}
 
       <ConfirmDialog

@@ -19,6 +19,7 @@ const ChatWindow = ({
   disabled = false,
   placeholder = 'Type your message...',
   error = null,
+  hideInput = false,
   chatbotName = 'AI',
   userName = 'You',
   chatbotColor = '#4B72FF',
@@ -248,84 +249,86 @@ const ChatWindow = ({
       </Box>
 
       {/* Input bar - floating card */}
-      <Box
-        sx={{
-          px: { xs: 2, md: 4 },
-          py: 1.25,
-          mt: -0.5,
-        }}
-      >
+      {!hideInput && (
         <Box
           sx={{
-            display: 'flex',
-            alignItems: 'flex-end',
-            gap: 1,
-            bgcolor: theme.palette.background.paper,
-            borderRadius: '16px',
-            p: 0.5,
-            pl: 2,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
-            transition: 'box-shadow 0.2s',
-            '&:focus-within': {
-              boxShadow: '0 4px 24px rgba(75,114,255,0.2)',
-            },
+            px: { xs: 2, md: 4 },
+            py: 1.25,
+            mt: -0.5,
           }}
         >
-          <TextField
-            fullWidth
-            multiline
-            minRows={1}
-            maxRows={3}
-            placeholder={disabled ? 'Daily limit reached' : placeholder}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={disabled}
-            variant="standard"
-            InputProps={{ disableUnderline: true }}
+          <Box
             sx={{
-              '& .MuiInputBase-root': {
-                fontSize: '0.875rem',
-                py: 1.125,
-                lineHeight: 1.3,
-              },
-              '& .MuiInputBase-root:before': { borderBottom: 'none !important' },
-              '& .MuiInputBase-root:after': { borderBottom: 'none !important' },
-              '& .MuiInputBase-root:hover:not(.Mui-disabled):before': { borderBottom: 'none !important' },
-              '& .MuiInputBase-input': {
-                '&::placeholder': {
-                  color: disabled ? theme.palette.error.main : theme.palette.text.disabled,
-                  opacity: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                },
-              },
-            }}
-          />
-          <IconButton
-            onClick={handleSend}
-            disabled={!input.trim() || loading || disabled}
-            sx={{
-              color: theme.palette.primary.main,
-              bgcolor: !input.trim() || loading || disabled
-                ? 'transparent'
-                : `${theme.palette.primary.main}15`,
-              borderRadius: '12px',
-              width: 36,
-              height: 36,
-              '&:hover': {
-                bgcolor: `${theme.palette.primary.main}25`,
+              display: 'flex',
+              alignItems: 'flex-end',
+              gap: 1,
+              bgcolor: theme.palette.background.paper,
+              borderRadius: '16px',
+              p: 0.5,
+              pl: 2,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+              transition: 'box-shadow 0.2s',
+              '&:focus-within': {
+                boxShadow: '0 4px 24px rgba(75,114,255,0.2)',
               },
             }}
           >
-            {loading ? (
-              <CircularProgress size={18} />
-            ) : (
-              <IconSend size={18} />
-            )}
-          </IconButton>
+            <TextField
+              fullWidth
+              multiline
+              minRows={1}
+              maxRows={3}
+              placeholder={disabled ? 'Daily limit reached' : placeholder}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={disabled}
+              variant="standard"
+              InputProps={{ disableUnderline: true }}
+              sx={{
+                '& .MuiInputBase-root': {
+                  fontSize: '0.875rem',
+                  py: 1.125,
+                  lineHeight: 1.3,
+                },
+                '& .MuiInputBase-root:before': { borderBottom: 'none !important' },
+                '& .MuiInputBase-root:after': { borderBottom: 'none !important' },
+                '& .MuiInputBase-root:hover:not(.Mui-disabled):before': { borderBottom: 'none !important' },
+                '& .MuiInputBase-input': {
+                  '&::placeholder': {
+                    color: disabled ? theme.palette.error.main : theme.palette.text.disabled,
+                    opacity: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                  },
+                },
+              }}
+            />
+            <IconButton
+              onClick={handleSend}
+              disabled={!input.trim() || loading || disabled}
+              sx={{
+                color: theme.palette.primary.main,
+                bgcolor: !input.trim() || loading || disabled
+                  ? 'transparent'
+                  : `${theme.palette.primary.main}15`,
+                borderRadius: '12px',
+                width: 36,
+                height: 36,
+                '&:hover': {
+                  bgcolor: `${theme.palette.primary.main}25`,
+                },
+              }}
+            >
+              {loading ? (
+                <CircularProgress size={18} />
+              ) : (
+                <IconSend size={18} />
+              )}
+            </IconButton>
+          </Box>
         </Box>
-      </Box>
+      )}
     </Box>
   );
 };
