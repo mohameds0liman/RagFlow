@@ -15,15 +15,13 @@ import {
   CardContent,
   CardActions,
   Chip,
-  Grid,
   useTheme,
 } from '@mui/material';
 import {
   IconArrowLeft,
-  IconUpload,
+  IconPlus,
   IconWorld,
   IconSettings,
-  IconPlayerPlay,
   IconCloudUpload,
   IconCircleCheckFilled,
   IconEye,
@@ -43,9 +41,7 @@ import {
   setSelectedKB,
 } from '../../../store/slices/kbSlice';
 import UpsertionConfigDialog from './UpsertionConfigDialog';
-import UploadDocumentDialog from './UploadDocumentDialog';
-import AddWebPageDialog from './AddWebPageDialog';
-import IngestStatusDialog from './IngestStatusDialog';
+import AddContentDialog from './AddContentDialog';
 import ChunksViewDialog from './ChunksViewDialog';
 
 const DocumentStoreDetail = () => {
@@ -57,9 +53,7 @@ const DocumentStoreDetail = () => {
   const { list, selectedKB, documents, documentLoading } = useSelector((state) => state.knowledgeBases);
 
   const [upsertConfigOpen, setUpsertConfigOpen] = useState(false);
-  const [uploadOpen, setUploadOpen] = useState(false);
-  const [webPageOpen, setWebPageOpen] = useState(false);
-  const [ingestOpen, setIngestOpen] = useState(false);
+  const [addContentOpen, setAddContentOpen] = useState(false);
   const [chunksOpen, setChunksOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [selectedDoc, setSelectedDoc] = useState(null);
@@ -142,18 +136,11 @@ const DocumentStoreDetail = () => {
           </Box>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
-              variant="outlined"
-              startIcon={<IconUpload size={18} />}
-              onClick={() => setUploadOpen(true)}
+              variant="contained"
+              startIcon={<IconPlus size={18} />}
+              onClick={() => setAddContentOpen(true)}
             >
-              Upload
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<IconWorld size={18} />}
-              onClick={() => setWebPageOpen(true)}
-            >
-              Add Web Page
+              Add Content
             </Button>
             <Button
               variant="outlined"
@@ -182,17 +169,10 @@ const DocumentStoreDetail = () => {
             <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'center' }}>
               <Button
                 variant="contained"
-                startIcon={<IconUpload size={18} />}
-                onClick={() => setUploadOpen(true)}
+                startIcon={<IconPlus size={18} />}
+                onClick={() => setAddContentOpen(true)}
               >
-                Upload Document
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<IconWorld size={18} />}
-                onClick={() => setWebPageOpen(true)}
-              >
-                Add Web Page
+                Add Content
               </Button>
             </Box>
           </Box>
@@ -246,16 +226,6 @@ const DocumentStoreDetail = () => {
                           <Chip label={`${doc.chunks_count ?? 0} chunks`} size="small" variant="outlined" sx={{ color: theme.palette.warning.main, borderColor: theme.palette.warning.main, borderRadius: '8px', fontSize: '0.8rem', fontWeight: 500, height: 28 }} />
                         </Box>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <Tooltip title="Load">
-                        <IconButton
-                          size="small"
-                          onClick={() => { setSelectedDoc(doc); setIngestOpen(true); }}
-                          disabled={doc.status === 'ready'}
-                          sx={{ width: 32, height: 32 }}
-                        >
-                          <IconPlayerPlay size={18} />
-                        </IconButton>
-                      </Tooltip>
                       <Tooltip title="Upsert">
                         <IconButton
                           size="small"
@@ -316,38 +286,16 @@ const DocumentStoreDetail = () => {
         existingConfig={selectedKB?.upsert_config_snapshot || null}
       />
 
-      <UploadDocumentDialog
-        open={uploadOpen}
-        onClose={(uploaded) => {
-          setUploadOpen(false);
-          if (uploaded) {
-            dispatch(fetchDocuments(id));
-            dispatch(fetchKnowledgeBases());
-          }
-        }}
-        kbId={id}
-      />
-
-      <AddWebPageDialog
-        open={webPageOpen}
+      <AddContentDialog
+        open={addContentOpen}
         onClose={(added) => {
-          setWebPageOpen(false);
+          setAddContentOpen(false);
           if (added) {
             dispatch(fetchDocuments(id));
             dispatch(fetchKnowledgeBases());
           }
         }}
         kbId={id}
-      />
-
-      <IngestStatusDialog
-        open={ingestOpen}
-        onClose={(ingested) => {
-          setIngestOpen(false);
-          if (ingested) dispatch(fetchDocuments(id));
-        }}
-        kbId={id}
-        document={selectedDoc}
       />
 
       <ChunksViewDialog

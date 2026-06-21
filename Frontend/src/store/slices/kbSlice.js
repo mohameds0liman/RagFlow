@@ -288,8 +288,10 @@ const kbSlice = createSlice({
       .addCase(triggerUpsert.pending, (state) => {
         state.upsertLoading = true;
       })
-      .addCase(triggerUpsert.fulfilled, (state) => {
+      .addCase(triggerUpsert.fulfilled, (state, action) => {
         state.upsertLoading = false;
+        const doc = state.documents.find((d) => d.id === action.meta.arg.docId);
+        if (doc) doc.status = 'embedded';
       })
       .addCase(triggerUpsert.rejected, (state) => {
         state.upsertLoading = false;

@@ -854,14 +854,6 @@ const AdminChat = () => {
                       <TextField label="Prompt Template" fullWidth multiline rows={6} size="small" value={settingsForm.prompt_template} onChange={(e) => setSettingsForm((p) => ({ ...p, prompt_template: e.target.value }))} />
                     </CardContent>
                   </Card>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button variant="contained" fullWidth onClick={handleUpdateSettings} disabled={savingSettings || !settingsForm.name.trim()}>
-                      {savingSettings ? <CircularProgress size={16} /> : 'Update'}
-                    </Button>
-                    <Button variant="outlined" fullWidth onClick={handleCompare} disabled={savingSettings || !settingsForm.name.trim()}>
-                      Compare
-                    </Button>
-                  </Box>
                 </Box>
               )}
             </Box>

@@ -1,8 +1,8 @@
 from app.components.registry import registry
 from langchain_community.docstore.document import Document
 from langchain_core.indexing.api import index as langchain_index
+from langchain.output_parsers.regex import RegexParser
 class PipelineFactory:
-
     # ### The Main Factories of The Rag Pipeline ###
     # def loader_factory(self , config:dict ={}) -> list[Document]:
     #     loader = registry.build(category=config["category"], name=config["name"], config=config["build_config"])
@@ -136,15 +136,63 @@ class PipelineFactory:
         qa_prompt = PromptTemplate(template=qa_template, input_variables=input_vars)
 
         chain_type = chain_cfg.get("chain_type", "stuff")
-        
+        combine_docs_chain_kwargs = {}
+
+        if chain_type == "stuff":
+            combine_docs_chain_kwargs["prompt"] = qa_prompt
+            combine_docs_chain_kwargs["document_variable_name"] = "context"
+
+        elif chain_type == "map_reduce":
+            combine_docs_chain_kwargs["question_prompt"] = qa_prompt  # WAS: map_prompt
+            combine_docs_chain_kwargs["combine_prompt"] = qa_prompt
+            combine_docs_chain_kwargs["combine_document_variable_name"] = "context"
+
+        elif chain_type == "refine":
+            combine_docs_chain_kwargs["question_prompt"] = qa_prompt
+            combine_docs_chain_kwargs["refine_prompt"] = qa_prompt
+            combine_docs_chain_kwargs["document_variable_name"] = "context"
+
+        elif chain_type == "map_rerank":
+            output_parser = RegexParser(
+                regex=r"(.*?)\nScore: (\d*)",
+                output_keys=["answer", "score"],
+            )
+            rerank_template = """Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+
+        In addition to giving an answer, also return a score of how fully it answered the user's question. This should be in the following format:
+
+        Question: [question here]
+        Helpful Answer: [answer here]
+        Score: [score between 0 and 100]
+
+        How to determine the score:
+        - Higher is a better answer
+        - Better responds fully to the asked question, with sufficient level of detail
+        - If you do not know the answer based on the context, that should be a score of 0
+        - Don't be overconfident!
+
+        Context:
+        ---------
+        {context}
+        ---------
+        Question: {question}
+        Helpful Answer:"""
+            rerank_prompt = PromptTemplate(
+                template=rerank_template,
+                input_variables=["context", "question"],
+                output_parser=output_parser,
+            )
+            combine_docs_chain_kwargs["prompt"] = rerank_prompt
+            combine_docs_chain_kwargs["document_variable_name"] = "context"
+
         build_config = {
             "llm": llm,
             "retriever": retriever,
             "chain_type": chain_type,
-            "combine_docs_chain_kwargs": {"prompt": qa_prompt},
+            "combine_docs_chain_kwargs": combine_docs_chain_kwargs,
         }
 
-        chain =registry.build(
+        chain = registry.build(
             category="chain",
             name="ConversationalRetrievalChain",
             config=build_config
