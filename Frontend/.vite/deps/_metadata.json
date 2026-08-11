@@ -1,97 +1,103 @@
 {
-  "hash": "7cf449cc",
+  "hash": "69d948c8",
   "configHash": "adb4acbd",
-  "lockfileHash": "d57cc4b2",
-  "browserHash": "40cd0ae8",
+  "lockfileHash": "179bbd8a",
+  "browserHash": "5a434e92",
   "optimized": {
     "@mui/material": {
       "src": "../../node_modules/@mui/material/index.mjs",
       "file": "@mui_material.js",
-      "fileHash": "937f5368",
+      "fileHash": "50ac54db",
       "needsInterop": false
     },
     "@mui/material/styles": {
       "src": "../../node_modules/@mui/material/styles/index.mjs",
       "file": "@mui_material_styles.js",
-      "fileHash": "aab6ba74",
+      "fileHash": "983529ca",
       "needsInterop": false
     },
     "@mui/x-data-grid": {
       "src": "../../node_modules/@mui/x-data-grid/index.mjs",
       "file": "@mui_x-data-grid.js",
-      "fileHash": "d2e91a6a",
+      "fileHash": "6c6bbded",
       "needsInterop": false
     },
     "@reduxjs/toolkit": {
       "src": "../../node_modules/@reduxjs/toolkit/dist/redux-toolkit.modern.mjs",
       "file": "@reduxjs_toolkit.js",
-      "fileHash": "ed22bb9a",
+      "fileHash": "668d8c3e",
       "needsInterop": false
     },
     "@tabler/icons-react": {
       "src": "../../node_modules/@tabler/icons-react/dist/esm/tabler-icons-react.mjs",
       "file": "@tabler_icons-react.js",
-      "fileHash": "eba28845",
+      "fileHash": "ae775447",
       "needsInterop": false
     },
     "axios": {
       "src": "../../node_modules/axios/index.js",
       "file": "axios.js",
-      "fileHash": "1c3d8969",
+      "fileHash": "74747ef7",
       "needsInterop": false
     },
     "formik": {
       "src": "../../node_modules/formik/dist/formik.esm.js",
       "file": "formik.js",
-      "fileHash": "24e46400",
+      "fileHash": "1d8ea499",
       "needsInterop": false
     },
     "notistack": {
       "src": "../../node_modules/notistack/notistack.esm.js",
       "file": "notistack.js",
-      "fileHash": "db5c8f2c",
+      "fileHash": "4fcf17e2",
       "needsInterop": false
     },
     "react-dom/client": {
       "src": "../../node_modules/react-dom/client.js",
       "file": "react-dom_client.js",
-      "fileHash": "60660493",
+      "fileHash": "5074e5b2",
       "needsInterop": true
+    },
+    "react-markdown": {
+      "src": "../../node_modules/react-markdown/index.js",
+      "file": "react-markdown.js",
+      "fileHash": "2cf659fc",
+      "needsInterop": false
     },
     "react-redux": {
       "src": "../../node_modules/react-redux/dist/react-redux.mjs",
       "file": "react-redux.js",
-      "fileHash": "f6893da2",
+      "fileHash": "0320296f",
       "needsInterop": false
     },
     "react-router-dom": {
       "src": "../../node_modules/react-router-dom/dist/index.mjs",
       "file": "react-router-dom.js",
-      "fileHash": "40297959",
+      "fileHash": "51a405d0",
       "needsInterop": false
     },
     "react": {
       "src": "../../node_modules/react/index.js",
       "file": "react.js",
-      "fileHash": "4c15cae5",
+      "fileHash": "50c4d6c8",
       "needsInterop": true
     },
     "react/jsx-dev-runtime": {
       "src": "../../node_modules/react/jsx-dev-runtime.js",
       "file": "react_jsx-dev-runtime.js",
-      "fileHash": "f4777422",
+      "fileHash": "b52b47d8",
       "needsInterop": true
     },
     "yup": {
       "src": "../../node_modules/yup/index.esm.js",
       "file": "yup.js",
-      "fileHash": "1a7db4ec",
+      "fileHash": "cf7e556b",
       "needsInterop": false
     }
   },
   "chunks": {
-    "ToggleButton-D7avo6tT": {
-      "file": "ToggleButton-D7avo6tT.js",
+    "ToggleButton-Cofhw0TG": {
+      "file": "ToggleButton-Cofhw0TG.js",
       "isDynamicEntry": false
     },
     "chunk-B-1-B7_t": {
@@ -102,6 +108,10 @@
       "file": "hoist-non-react-statics.cjs-CVpQxFaL.js",
       "isDynamicEntry": false
     },
+    "jsx-runtime-D51v3ApR": {
+      "file": "jsx-runtime-D51v3ApR.js",
+      "isDynamicEntry": false
+    },
     "react-dom-DdB5XhIJ": {
       "file": "react-dom-DdB5XhIJ.js",
       "isDynamicEntry": false
@@ -110,8 +120,8 @@
       "file": "reselect-DOl2R5gC.js",
       "isDynamicEntry": false
     },
-    "styles-C-iTAj2r": {
-      "file": "styles-C-iTAj2r.js",
+    "styles-w_MolAHl": {
+      "file": "styles-w_MolAHl.js",
       "isDynamicEntry": false
     }
   }
