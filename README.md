@@ -6,7 +6,7 @@ Self-hosted RAG platform that turns company documents into Q&A chatbots.
 
 ## Description
 
-RAGFlow is an internal Retrieval-Augmented Generation (RAG) platform with two roles: **Admin** and **User**. Admins build and manage the full knowledge pipeline — upload documents to knowledge bases, ingest and chunk them, embed and upsert them into a local vector store, then configure chatbots on top of that data. Users chat with the chatbots they have been granted access to. The backend is a FastAPI + LangChain pipeline driven by a Flowise-style component registry; the frontend is a React/MUI admin console with a chat UI for end users.
+RAGFlow is an internal Retrieval-Augmented Generation (RAG) platform with two roles: **Admin** and **User**. Admins build and manage the full knowledge pipeline — upload documents to knowledge bases, ingest and chunk them, embed and upsert them into a local vector store, then configure chatbots on top of that data. Users chat with the chatbots they have been granted access to. The backend is a FastAPI + LangChain pipeline , the frontend is a React/MUI admin console with a chat UI for end users.
 
 ## Table of Contents
 
@@ -55,8 +55,8 @@ RAGFlow is an internal Retrieval-Augmented Generation (RAG) platform with two ro
 
 ## Prerequisites
 
-1. **Python** — `requirements.txt` pins dependency versions; Python interpreter version is not declared in the repo. TODO: confirm.
-2. **Node.js + npm** — required by the Vite frontend; minimum version not declared. TODO: confirm.
+1. **Python** — `requirements.txt`  Python interpreter version is  `3.11.9`
+2. **Node.js + npm** — required by the Vite frontend
 3. **PostgreSQL** — running on `localhost:5432` with a database named `ragflow`. The connection string `postgresql://postgres:2463@localhost:5432/ragflow` is hardcoded in `backend/app/db/session.py`.
 4. **Ollama** — running on `localhost:11434` with the models used by your configuration (defaults: `llama3.1:8b` for chat, `nomic-embed-text` for embeddings):
    ```bash
@@ -102,8 +102,6 @@ RAGFlow is an internal Retrieval-Augmented Generation (RAG) platform with two ro
    The seeded admin account is `admin@gmail.com` / `admin123`.
 
 ## Configuration
-
-The backend has **no environment-file configuration** — all settings are hardcoded in source files (see table below).
 
 | Setting | Location | Description | Example value |
 |---|---|---|---|
@@ -173,7 +171,6 @@ Open `http://localhost:5173`. Alternatively, `run.bat` starts both servers in se
 
 Interactive API docs are available at `http://127.0.0.1:8000/docs` (FastAPI auto-generated).
 
-Note: the create-KB endpoint uses `POST /admin/knowledge-bases` (hyphen) while all other knowledge-base endpoints use `knowledge_bases` (underscore) — this mismatch exists in the backend and is intentional for now.
 
 ## Project Structure
 
@@ -226,7 +223,6 @@ Rag_Flow/
 
 ## Running Tests
 
-No automated test suite exists in this repository (no test framework, no test files).
 
 The frontend has a lint script:
 
@@ -235,25 +231,6 @@ cd Frontend
 npm run lint
 ```
 
-## Deployment
-
-No deployment configuration exists in the repository (no Dockerfile, no CI pipeline, no hosting config).
-
-The production-serving path is already wired: `backend/app/main.py` mounts the static frontend build via `StaticFiles(html=True)` from `Frontend/dist`:
-
-```bash
-cd Frontend
-npm run build
-```
-
-Then run the backend with `python run.py` and open `http://127.0.0.1:8000`. The static mount path is hardcoded to an absolute Windows path and must be edited before deploying elsewhere. The frontend must be built with `VITE_API_URL` pointing at the deployed backend.
-
-## Contributing
-
-1. Work inside `Frontend/` for UI changes; backend code lives under `backend/`. Do not commit `.env` files or secrets.
-2. Follow the existing conventions: every frontend API call goes through `src/api/axiosInstance.js`, server data is fetched via Redux `createAsyncThunk`, destructive actions use `ConfirmDialog`, and errors surface via `enqueueSnackbar`.
-3. Run `npm run lint` (frontend) before opening a pull request.
-4. Update `tasks.md` and the PRD if you change scope.
 
 ## License
 
