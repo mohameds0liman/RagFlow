@@ -1,8 +1,10 @@
 chroma/
 chroma_db/
+sa_report_db/
 uploads/
 backend/app/chroma_db/
 backend/uploads/
+Stages/
 ###############################################################
 .env
 .env.*
