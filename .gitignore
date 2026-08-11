@@ -1,11 +1,14 @@
+# ===== Data & runtime dirs =====
 chroma/
 chroma_db/
 sa_report_db/
 uploads/
 backend/app/chroma_db/
+backend/app/uploads/
 backend/uploads/
 Stages/
-###############################################################
+
+# ===== Env & virtualenvs =====
 .env
 .env.*
 !.env.example
@@ -15,37 +18,75 @@ venv/
 .venv/
 ENV/
 
+# ===== Python =====
 __pycache__/
 *.py[cod]
 *$py.class
-
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 .hypothesis/
 .tox/
 .nox/
-
 .coverage
 .coverage.*
 htmlcov/
+*.egg
+*.whl
+pip-log.txt
+pip-delete-this-directory.txt
+.ipynb_checkpoints/
 
-build/
+# ===== Node / Vite / Frontend =====
+node_modules/
+.vite/
 dist/
+dist-ssr/
+.eslintcache
+*.local
+screenshots/
+
+# ===== Build output =====
+build/
 .eggs/
 *.egg-info/
 pip-wheel-metadata/
 
+# ===== Logs =====
 *.log
 logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
+# ===== Databases =====
 *.sqlite3
 *.db
-backend/app/chroma_db/
-backend/app/uploads/
 
+# ===== Editors / OS =====
 .vscode/
 .idea/
-
 .DS_Store
 Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# ===== Temp & backup =====
+nohup.out
+*.tmp
+*.temp
+*.bak
+*.orig
+*.swp
+*~
+
+# ===== Secrets & certs =====
+*.pem
+*.key
+*.crt
+*.p12
+
+# ===== Generic caches =====
+.cache/

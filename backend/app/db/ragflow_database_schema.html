@@ -47,8 +47,23 @@ const diagram = `erDiagram
     string reset_password_token
     timestamp reset_password_expires_at
     timestamp last_login_at
+    int daily_message_limit
+    int messages_used_today
+    timestamp limit_reset_date
+    bool stt_enabled
+    bool tts_enabled
+    bool initial_access_granted
+    uuid granted_by FK
+    timestamp granted_at
     timestamp created_at
     timestamp updated_at
+  }
+
+  user_access {
+    uuid id PK
+    uuid user_id FK
+    uuid chatbot_id FK
+    timestamp granted_at
   }
 
   document_store {
@@ -57,6 +72,7 @@ const diagram = `erDiagram
     string name
     text description
     enum status
+    json upsert_config_snapshot
     json vector_store_config
     json embedding_config
     json record_manager_config
@@ -64,13 +80,26 @@ const diagram = `erDiagram
     timestamp updated_date
   }
 
+  uploaded_document {
+    uuid id PK
+    uuid store_id FK
+    string file_name
+    string file_path
+    string file_type
+    float file_size_mb
+    enum status
+    timestamp created_date
+    timestamp updated_date
+  }
+
   document_loader {
     uuid id PK
+    uuid store_id FK
     uuid doc_id FK
     string name
     string loader_type
     json loader_config
-    string source_path
+    string file_path
     enum status
     timestamp created_date
     timestamp updated_date
@@ -90,36 +119,29 @@ const diagram = `erDiagram
   document_chunk {
     uuid id PK
     uuid store_id FK
-    uuid loader_id FK
-    uuid splitter_id FK
+    uuid doc_id FK
     text page_content
-    json metadata
+    json meta_data
     int chunk_no
     enum status
     timestamp created_date
     timestamp updated_date
   }
 
-  upsertion_record {
-    uuid id PK
-    uuid store_id FK
-    string key
-    string namespace
-    float updated_at
-    string group_id
-    string source_hash
-  }
-
   chatbot {
     uuid id PK
     uuid created_by FK
-    uuid document_store_id FK
+    uuid store_id FK
     string name
     text description
-    bool is_active
+    enum status
+    timestamp published_at
     json vector_store_config
+    json embedding_config
     json llm_config
     json chain_config
+    json memory_config
+    json prompt_config
     timestamp created_date
     timestamp updated_date
   }
@@ -148,16 +170,20 @@ const diagram = `erDiagram
   user ||--o{ chatbot : "creates"
   user ||--o{ chat_session : "starts"
   user ||--o{ chat_message : "sends"
+  user ||--o{ user_access : "granted to"
+  user ||--o{ user : "grants (self-ref)"
 
+  chatbot ||--o{ user_access : "restricts"
+
+  document_store ||--o{ uploaded_document : "contains"
   document_store ||--o{ document_loader : "has"
   document_store ||--o{ document_chunk : "stores"
-  document_store ||--o{ upsertion_record : "tracked by"
   document_store ||--o{ chatbot : "used by"
 
-  document_loader ||--|| document_splitter : "configured with"
-  document_loader ||--o{ document_chunk : "produces"
+  uploaded_document ||--o| document_loader : "processed by"
+  uploaded_document ||--o{ document_chunk : "split into"
 
-  document_splitter ||--o{ document_chunk : "shapes"
+  document_loader ||--|| document_splitter : "configured with"
 
   chatbot ||--o{ chat_session : "hosts"
 

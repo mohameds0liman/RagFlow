@@ -1,6 +1,5 @@
 from app.components.base import BaseComponent, InputParam
-from langchain_ollama import OllamaEmbeddings
-
+from langchain_ollama.embeddings import OllamaEmbeddings
 class OllamaEmbeddingComponent(BaseComponent):
     name = "OllamaEmbedding"
     category="embedder"

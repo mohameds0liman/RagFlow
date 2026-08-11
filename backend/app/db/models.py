@@ -395,7 +395,7 @@ if __name__ == "__main__":
         admin = User(
             username      = "admin",
             email         = "admin@gmail.com",
-            password_hash = "admin123",
+            password_hash = "admin123",    #or  m123456789
             role          = UserRole.admin,
             is_active     = True,
             is_verified   = True,

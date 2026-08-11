@@ -1,3 +1,40 @@
+# Vite dev cache (regenerated on npm run dev)
+.vite/
+
+# ESLint cache
+.eslintcache
+
+# Screenshots / generated artifacts (optional)
+screenshots/
+
+# Runtime & temp files
+nohup.out
+*.tmp
+*.temp
+*.bak
+*.orig
+*.swp
+*~
+desktop.ini
+$RECYCLE.BIN/
+
+# Secrets & certs — never commit these
+*.pem
+*.key
+*.crt
+*.p12
+
+# Python packaging leftovers
+*.egg
+*.whl
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Jupyter notebooks cache
+.ipynb_checkpoints/
+
+# Generic cache dirs
+.cache/
 # Logs
 logs
 *.log
